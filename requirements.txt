@@ -1,0 +1,9 @@
+# Core
+numpy
+scipy
+matplotlib
+h5py
+
+# ML / Emulator Tools
+torch
+scikit-learn

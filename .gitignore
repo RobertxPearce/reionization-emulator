@@ -1,0 +1,39 @@
+# Ignore large data
+data/raw/
+data/cl/
+data/interim/
+data/models/
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb~
+**/.ipynb_checkpoints
+
+# PyCharm / JetBrains
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.log
+*.out
+*.err
+
+# OS
+.DS_Store
+Thumbs.db
