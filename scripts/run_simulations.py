@@ -48,7 +48,7 @@ def run_samples(samples, outroot):
     log_path = outroot / "sim_log.txt"
     with log_path.open("w") as log:
         # Write header line
-        log.write("sim_id\tzmean\talpha\tkb\n")
+        log.write("sim_id\tzmean\talpha\tkb\trc\n")
 
         # Loop over all rows of the samples array
         for i, row in enumerate(samples):
@@ -61,7 +61,7 @@ def run_samples(samples, outroot):
             # Run the executable
             rc = sp.run(args).returncode
             # Write run info to log (tab-separated)
-            log.write(f"sim{i}\t{row[0]}\t{row[1]}\t{row[2]}\n")
+            log.write(f"sim{i}\t{row[0]}\t{row[1]}\t{row[2]}\t{rc}\n")
             log.flush()
             # Print progress: run number + return code
             print(f"[{i+1}/{len(samples)}] rc={rc}")
