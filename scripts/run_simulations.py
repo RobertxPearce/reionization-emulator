@@ -56,11 +56,13 @@ def run_samples(samples, outroot):
             outdir = outroot / f"sim{i}"
             outdir.mkdir(parents=True, exist_ok=True)
             # Build the command
-            args = [str(EXEC), str(outdir)] + [str(v) for v in row]
+            out_prefix = str(outdir) + "/"
+            args = [str(EXEC), out_prefix] + [str(v) for v in row]
             # Run the executable
             rc = sp.run(args).returncode
             # Write run info to log (tab-separated)
             log.write(f"sim{i}\t{row[0]}\t{row[1]}\t{row[2]}\n")
+            log.flush()
             # Print progress: run number + return code
             print(f"[{i+1}/{len(samples)}] rc={rc}")
 
