@@ -15,8 +15,8 @@ SEED = 123
 # Params and their bounds
 PARAMS = [
     ("zmean", 6.0, 10.0),
-    ("alpha", 0.10, 0.50),
-    ("kb",    1.0, 10.0),
+    ("alpha", 0.10, 3.0),
+    ("kb",    0.10, 2.0),
 ]
 
 
