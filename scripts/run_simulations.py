@@ -4,8 +4,8 @@ from scipy.stats import qmc
 
 
 # Path to simulation executable and output directory
-EXEC = Path("./ksz_2plt.x")
-OUT  = Path("~/").expanduser()
+EXEC = Path("/jet/home/rpearce/software/ksz_2lpt/ksz_2lpt.x")
+OUT  = Path("~/ocean/emulatorv0").expanduser()
 
 # Number of samples / simulations
 NUM_SAMPLES = 10
