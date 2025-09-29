@@ -4,6 +4,9 @@ data/cl/
 data/interim/
 data/models/
 
+# Simulation files
+planck_2018_transfer_z000.dat
+
 # Virtual environments
 .venv/
 env/
