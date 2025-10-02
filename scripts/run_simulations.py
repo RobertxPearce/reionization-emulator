@@ -1,3 +1,8 @@
+#-------------------------------------------------------------------
+# Run Reionization Simulations Using Latin Hypercube Sampling
+# Robert Pearce
+#-------------------------------------------------------------------
+
 from pathlib import Path
 import subprocess as sp
 from scipy.stats import qmc
@@ -80,3 +85,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+#-----------------------------
+#         END OF FILE
+#-----------------------------
