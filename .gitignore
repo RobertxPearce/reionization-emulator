@@ -12,6 +12,8 @@ planck_2018_transfer_z000.dat
 env/
 venv/
 ENV/
+.venv_unix/
+.venv_windows/
 
 # Jupyter
 .ipynb_checkpoints/
