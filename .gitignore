@@ -1,6 +1,8 @@
 # Ignore large data sets
 data/raw/*.hdf5
 data/tau_tests/*.hdf5
+data/raw/**/*.hdf5
+data/tau_tests/**/*.hdf5
 
 # Keep directories
 !data/raw/
