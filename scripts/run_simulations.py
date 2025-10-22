@@ -10,7 +10,7 @@ from scipy.stats import qmc
 
 # Path to simulation executable and output directory
 EXEC = Path("/jet/home/rpearce/software/ksz_2lpt/ksz_2lpt.x")
-OUT  = Path("~/ocean/sims_v1").expanduser()
+OUT  = Path("~/ocean/sims_v2").expanduser()
 
 # Number of samples / simulations
 NUM_SAMPLES = 10
