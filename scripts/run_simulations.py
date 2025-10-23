@@ -10,17 +10,17 @@ from scipy.stats import qmc
 
 # Path to simulation executable and output directory
 EXEC = Path("/jet/home/rpearce/software/ksz_2lpt/ksz_2lpt.x")
-OUT  = Path("~/ocean/sims_v2").expanduser()
+OUT  = Path("~/ocean/raw/sims_v3").expanduser()
 
 # Number of samples / simulations
-NUM_SAMPLES = 10
+NUM_SAMPLES = 100
 # Seed for reproducible results
 SEED = 123
 
 # Params and their bounds
 PARAMS = [
     ("zmean", 7.0, 9.0),
-    ("alpha", 0.10, 3.0),
+    ("alpha", 0.10, 0.90),
     ("kb",    0.10, 2.0),
 ]
 

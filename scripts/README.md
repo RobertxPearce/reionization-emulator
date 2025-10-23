@@ -15,3 +15,5 @@ This directory contains helper scripts.
 - **`build_dataset.py`**  
     Collects simulation outputs, extracts kSZ maps, tau, and power spectra, and organizes them with input parameters into a training dataset for the emulator.
 
+- **`job.sh`**  
+    A SLURM submission script that requests cluster resources, compiles the simulation code, and executes teh Python script.
