@@ -13,7 +13,7 @@ EXEC = Path("/jet/home/rpearce/software/ksz_2lpt/ksz_2lpt.x")
 OUT  = Path("~/ocean/raw/sims_v3").expanduser()
 
 # Number of samples / simulations
-NUM_SAMPLES = 100
+NUM_SAMPLES = 3
 # Seed for reproducible results
 SEED = 123
 
