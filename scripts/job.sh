@@ -24,8 +24,8 @@ export KMP_STACKSIZE=256m
 # cd $SLURM_SUBMIT_DIR
 
 # Define the simulation code directory
-SIM_DIR = "/jet/home/rpearce/software/ksz_2lpt/"
-SCRIPT_DIR = $SLURM_SUBMIT_DIR
+SIM_DIR="/jet/home/rpearce/software/ksz_2lpt/"
+SCRIPT_DIR="$SLURM_SUBMIT_DIR"
 
 # Go to simulation code directory
 echo "Changing directory to $SIM_DIR for compilation"
