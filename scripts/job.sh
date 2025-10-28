@@ -9,6 +9,8 @@
 #SBATCH --mail-type ALL
 #SBATCH --mail-user robertbdpearce@gmail.com
 
+set -euo pipefail
+
 # Intel
 module unload intel
 module load intel-icc
@@ -17,15 +19,14 @@ which ifort
 
 # Set environment variables
 export KMP_LIBRARY=turnaround
-export KMP_SCHEDULE=static,balanced
+export KMP_SCHEDULE=static
 export KMP_STACKSIZE=256m
-
-# Go to the job scratch directory
-# cd $SLURM_SUBMIT_DIR
 
 # Define the simulation code directory
 SIM_DIR="/jet/home/rpearce/software/ksz_2lpt/"
 SCRIPT_DIR="$SLURM_SUBMIT_DIR"
+KSZ_BIN="$SIM_DIR/ksz_2lpt.x"
+MAMBA="/jet/home/rpearce/miniforge3/bin/mamba"
 
 # Go to simulation code directory
 echo "Changing directory to $SIM_DIR for compilation"
@@ -39,14 +40,14 @@ make ksz_2lpt.x
 echo "Changing directory to $SCRIPT_DIR for execution"
 cd $SCRIPT_DIR
 
-# Activate environment
-mamba activate simenv
+# Run Python inside the conda env
+"$MAMBA" run -n simenv python "$SCRIPT_DIR/run_simulations.py"
 
-# Run just the simulation
-# ./ksz_2lpt.x > log
+# Activate environment
+# mamba activate simenv
 
 # Run the Python script
-python run_simulations.py
+# python run_simulations.py
 
 # Deactivate environment
-conda deactivate
+# conda deactivate
