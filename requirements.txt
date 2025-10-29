@@ -1,7 +1,9 @@
 # Core
 numpy
+pandas
 scipy
 matplotlib
+seaborn
 h5py
 
 # ML / Emulator Tools
