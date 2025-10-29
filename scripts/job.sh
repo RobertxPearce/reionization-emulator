@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -J ksz_2lpt
 #SBATCH -p RM
-#SBATCH -t 2:00:00
+#SBATCH -t 20:00:00
 #SBATCH -N 1
 #SBATCH --ntasks-per-node 128
 #SBATCH -o std.log
