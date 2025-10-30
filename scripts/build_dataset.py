@@ -12,9 +12,9 @@ import h5py
 #                              Constant Paths
 # ============================================================================
 # Path to parent sim directory
-SIM_DIR = Path(r"C:\Users\rober\Downloads\reionization-emulator\data\raw\sims_v4")
+SIM_DIR = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/raw/sims_v5")
 # Output File
-OUTPUT_FILE = Path(r"C:\Users\rober\Downloads\reionization-emulator\data\processed\proc_sims_v4.h5")
+OUTPUT_FILE = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/processed/proc_sims_v5.h5")
 
 
 # ----------------------------------------------------------------------------
