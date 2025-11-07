@@ -6,9 +6,10 @@
 # Author: Robert Pearce
 # ------------------------------------------------------------------------------------------
 
+import h5py
 from pathlib import Path
 import numpy as np
-import h5py
+from powerbox.tools import get_power
 
 # =============================================================================
 #                              CONSTANTS
@@ -175,6 +176,59 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
     return centers, cl, dcl, meta
 
 
+from powerbox.tools import get_power
+import numpy as np
+
+def compute_cl_powerbox(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
+    """
+    Flat-sky C_ell using powerbox.get_power for a 2D temperature map (μK).
+
+    Parameters
+    ----------
+    map_uK : 2D array, temperature in microkelvin
+    theta_max_rad : float, full field-of-view size in radians
+    nbins : int, number of ℓ bins
+
+    Returns
+    -------
+    ell : 1D array of multipoles (≈ k for angular fields with boxlength in radians)
+    cl  : 1D array, C_ell in microK^2
+    dcl : 1D array, NaN placeholder (powerbox doesn't give Nmodes directly)
+    meta: dict, bookkeeping
+    """
+    N = map_uK.shape[0]
+    dtheta = theta_max_rad / N  # radians per pixel
+
+    # IMPORTANT: get_power returns (p_k, meank), i.e., (Pk, k)
+    Pk, k = get_power(
+        map_uK,
+        boxlength=theta_max_rad,   # the box length is the angular size (radians)
+        bins=nbins,
+        log_bins=False,
+        bin_ave=True,
+        ignore_zero_mode=True,
+        bins_upto_boxlen=True      # silence the future warning
+    )
+
+    # With the default cosmology Fourier convention (e^{i k x}),
+    # k is in rad^{-1}. For a sky patch whose length unit IS radians,
+    # the flat-sky multipole is ℓ ≈ k (no extra 2π factor needed).
+    ell = k.copy()
+    cl  = Pk.copy()               # already μK^2 since map_uK is μK
+    dcl = np.full_like(cl, np.nan)
+
+    meta = dict(
+        N=int(N),
+        dtheta_rad=float(dtheta),
+        theta_max_rad=float(theta_max_rad),
+        nbins=int(nbins),
+        method="powerbox.get_power (Pk,k)",
+        ell_min_expected=float(2.0*np.pi/theta_max_rad),
+        ell_min_measured=float(ell[1] if ell[0]==0 else ell[0])  # quick peek
+    )
+    return ell, cl, dcl, meta
+
+
 # -----------------------------------------------------------------------------
 #               COMPUTE D_ELL = ell*(ell+1)*C_ELL/(2*pi)
 # -----------------------------------------------------------------------------
@@ -214,6 +268,11 @@ def main():
             raise SystemExit("Processed file is missing top-level group '/sims'")
         sims_grp = proc["sims"]
 
+        # Choose to use manual or powerbox computation
+        # choice = input("Manual Calculation (1) or PowerBox (2): ")
+        # if choice != "1" and choice != "2":
+        #     raise SystemExit(f"Invalid choice {choice}")
+
         # Loop over each simulation folder
         for sim_dir in sim_dirs:
             sim_name = sim_dir.name
@@ -245,8 +304,15 @@ def main():
             # Convert deltaT/T to microkelvin
             map_uK = to_microkelvin(ksz, tcmb0)
 
-            # Compute flat-sky angular power spectrum
-            ell, cl_ksz, dcl, meta = compute_cl_flat_sky(map_uK, theta_max_rad, NBINS)
+            # if choice == "1":
+            #     # Compute flat-sky angular power spectrum using manual calculations
+            #     ell, cl_ksz, dcl, meta = compute_cl_flat_sky(map_uK, theta_max_rad, NBINS)
+            # elif choice == "2":
+            #     # Compute flat-sky angular power spectrum using powerbox
+            #     ell, cl_ksz, dcl, meta = compute_cl_powerbox(map_uK, theta_max_rad, NBINS)
+
+            # Compute flat-sky angular power spectrum using powerbox
+            ell, cl_ksz, dcl, meta = compute_cl_powerbox(map_uK, theta_max_rad, NBINS)
 
             # Compute D_ell from C_ell
             dl_ksz = compute_dl(ell, cl_ksz)

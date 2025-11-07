@@ -5,6 +5,7 @@ scipy
 matplotlib
 seaborn
 h5py
+powerbox
 
 # ML / Emulator Tools
 torch
