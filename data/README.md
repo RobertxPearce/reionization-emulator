@@ -10,7 +10,7 @@ This folder organizes all simulation outputs, intermediate products, and final d
 - **`raw/`** – Raw outputs directly from the Zerion Fortran simulations.  
     Format: HDF5 files.
 
-- **`processed/`** – Processed simulation datasets ready for analysis and emulator input.  
+- **`processed/`** – Processed HDF5 datasets containing model parameters, kSZ maps, angular power spectra (C_ell and D_ell) for each simulation, organized under /sims for analysis and emulator training.  
     Format: HDF5 files.
 
 ## Data Access
