@@ -187,7 +187,7 @@ def compute_cl_powerbox(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
     ----------
     map_uK : 2D array, temperature in microkelvin
     theta_max_rad : float, full field-of-view size in radians
-    nbins : int, number of ℓ bins
+    nbins : int, number of ell bins
 
     Returns
     -------
