@@ -37,4 +37,4 @@ By simulating this process and computing the **angular power spectrum**, we can 
 - `results` - Plots and charts documenting progress.
 
 ## Acknowledgments
-This work is part of ongoing research with [Dr. Paul La Plante](https://plaplant.github.io/) in the LEADS Lab at the [University of Nevada, Las Vegas](https://www.unlv.edu/cs), using computing resources provided by the Pittsburgh Supercomputing Center (PSC) through the ACCESS program.
+This work is part of ongoing research with [Dr. Paul La Plante](https://plaplant.github.io/) in the LEADS Lab at the [University of Nevada, Las Vegas](https://www.unlv.edu/cs), using computing resources with the Pittsburgh Supercomputing Center.
