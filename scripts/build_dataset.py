@@ -111,17 +111,22 @@ def write_sim_group(g: h5py.Group, payload: dict):
     """
     Write one simulation into group g
     """
-    # Arrays
-    g.create_dataset("ksz_map",    data=payload["ksz_map"],    compression="gzip", shuffle=True)
-    g.create_dataset("pk_tt",      data=payload["pk_tt"],      compression="gzip", shuffle=True)
-    g.create_dataset("xmval_list", data=payload["xmval_list"], compression="gzip", shuffle=True)
-    g.create_dataset("zval_list",  data=payload["zval_list"],  compression="gzip", shuffle=True)
+    # Subdirectories for params and output
+    gp = g.create_group("params")
+    go = g.create_group("output")
+
     # Scalars
-    g.create_dataset("alpha_zre",  data=float(payload["alpha_zre"]))
-    g.create_dataset("b0_zre",     data=float(payload["b0_zre"]))
-    g.create_dataset("kb_zre",     data=float(payload["kb_zre"]))
-    g.create_dataset("zmean_zre",  data=float(payload["zmean_zre"]))
-    g.create_dataset("tau",        data=float(payload["tau"]))
+    gp.create_dataset("alpha_zre",  data=float(payload["alpha_zre"]))
+    gp.create_dataset("b0_zre",     data=float(payload["b0_zre"]))
+    gp.create_dataset("kb_zre",     data=float(payload["kb_zre"]))
+    gp.create_dataset("zmean_zre",  data=float(payload["zmean_zre"]))
+
+    # Arrays
+    go.create_dataset("ksz_map",    data=payload["ksz_map"],    compression="gzip", shuffle=True)
+    go.create_dataset("pk_tt",      data=payload["pk_tt"],      compression="gzip", shuffle=True)
+    go.create_dataset("xmval_list", data=payload["xmval_list"], compression="gzip", shuffle=True)
+    go.create_dataset("zval_list",  data=payload["zval_list"],  compression="gzip", shuffle=True)
+    go.create_dataset("tau",        data=float(payload["tau"]))
 
 
 # ----------------------------------------------------------------------------
@@ -176,7 +181,8 @@ def main():
         # Record metadata
         fout.attrs["source_root"] = str(root)
         fout.attrs["description"] = "Processed ksz_2lpt simulation output for reionization emulator."
-        fout.attrs["version"] = 1
+        fout.attrs["version"] = 2
+        fout.attrs["layout"] = "sims/sim<n>/params/* and sims/sim<n>/output/*"
 
         # Create top-level group to hold all simulation subgroups
         sims = fout.create_group("sims")
@@ -237,5 +243,3 @@ if __name__ == "__main__":
 #-----------------------------
 #         END OF FILE
 #-----------------------------
-
-
