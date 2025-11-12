@@ -1,9 +1,7 @@
 # ------------------------------------------------------------------------------------------
 # Compute angular power spectrum (C_ell) from each kSZ map in the processed HDF5 file.
-# Writes results back into the same file under /sims/sim<N>/cl.
-# Input:  ksz_map is deltaT/T (dimensionless)
-# Output: C_ell and D_ell (both in microkelvin^2)
-# Author: Robert Pearce
+# Writes results back into the same file under /sims/sim<n>/cl.
+# Robert Pearce
 # ------------------------------------------------------------------------------------------
 
 import h5py
@@ -20,7 +18,7 @@ NBINS = 50  # Number of ell bins for the azimuthal averaging
 
 
 # -----------------------------------------------------------------------------
-#                              FILE DISCOVERY
+#                              File Discovery
 # -----------------------------------------------------------------------------
 def find_files(sim_dir: Path):
     """
@@ -43,7 +41,7 @@ def find_files(sim_dir: Path):
 
 
 # -----------------------------------------------------------------------------
-#                      READ Tcmb0, kSZ MAP, THETA_MAX
+#                      Read tcmb0, ksz_map, theta_max
 # -----------------------------------------------------------------------------
 def read_tcmb0(obs_file: Path) -> float:
     """
@@ -74,7 +72,7 @@ def read_theta_max_rad(obs_file: Path) -> float:
 
 
 # -----------------------------------------------------------------------------
-#                 CONVERT deltaT/T TO MICROKELVIN
+#                 Convert deltaT/T TO Microkelvin
 # -----------------------------------------------------------------------------
 def to_microkelvin(ksz_map_dt_over_t: np.ndarray, tcmb0_K: float) -> np.ndarray:
     """
@@ -85,22 +83,11 @@ def to_microkelvin(ksz_map_dt_over_t: np.ndarray, tcmb0_K: float) -> np.ndarray:
 
 
 # -----------------------------------------------------------------------------
-#         COMPUTE FLAT-SKY ANGULAR POWER SPECTRUM (C_ell)
+#              Compute Flat-Sky Angular Power Spectrum (c_ell)
 # -----------------------------------------------------------------------------
 def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
     """
     Compute the flat-sky angular power spectrum from a 2D temperature map.
-
-    Inputs:
-        map_uK        - 2D array (N x N) of temperature in microkelvin
-        theta_max_rad - total angular size of the map in radians
-        nbins         - number of ell bins for averaging
-
-    Returns:
-        ell_centers   - center of each ell bin
-        cl            - angular power spectrum (C_ell) in microkelvin^2
-        dcl           - simple mode-count uncertainty
-        meta          - dictionary of info about this calculation
     """
     # Ensure map is square
     T = np.array(map_uK, dtype=np.float64, copy=True)
@@ -112,31 +99,35 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
     T -= np.nanmean(T)
     T = np.nan_to_num(T, copy=False)
 
-    # Compute pixel size and total area
+    # Compute pixel size and total area in radians
     dtheta = theta_max_rad / N
     area = theta_max_rad * theta_max_rad
 
-    # Compute FFT frequencies and convert to multipoles (ell = 2 * pi * f)
-    fx = np.fft.fftfreq(N, d=dtheta)
-    fy = np.fft.fftfreq(N, d=dtheta)
-    lx = 2.0 * np.pi * fx
-    ly = 2.0 * np.pi * fy
-    Lx, Ly = np.meshgrid(lx, ly, indexing="xy")
-    ell_2d = np.sqrt(Lx**2 + Ly**2)
+    # Compute Fast Fourier Transform frequencies and convert to multipoles (ell = 2 * pi * f)
+    fx = np.fft.fftfreq(N, d=dtheta)    # Returns frequency values corresponding to the x-axis
+    fy = np.fft.fftfreq(N, d=dtheta)    # Returns frequency values corresponding to the y-axis
+
+    # Convert from frequency to multipole
+    lx = 2.0 * np.pi * fx   # l = 2*pi*fx
+    ly = 2.0 * np.pi * fy   # l = 2*pi*fy
+
+    # Combine into a 2D grid
+    Lx, Ly = np.meshgrid(lx, ly, indexing="xy") # 2D arrays representing lx and ly
+    ell_2d = np.sqrt(Lx**2 + Ly**2)             # Compute the total angular wave number
 
     # Perform 2D FFT and normalize
-    T_tilde = np.fft.fft2(T) * (dtheta**2)
-    P2D = (T_tilde * np.conj(T_tilde)).real / area  # microK^2
+    T_tilde = np.fft.fft2(T) * (dtheta**2)          # Compute the 2D FFT and normalize
+    P2D = (T_tilde * np.conj(T_tilde)).real / area  # Get power for each angular mode and normalize to uK^2
 
     # Define ell range and bins
-    ell_min = 2.0 * np.pi / theta_max_rad
-    ell_max = ell_min * (N / 2.0)
-    edges = np.linspace(ell_min, ell_max, nbins + 1)
-    centers = 0.5 * (edges[1:] + edges[:-1])
+    ell_min = 2.0 * np.pi / theta_max_rad               # Compute smallest ell (large-scale features)
+    ell_max = ell_min * (N / 2.0)                       # Compute largest ell (small-scale structures)
+    edges = np.linspace(ell_min, ell_max, nbins + 1)    # Evenly spaced boundaries from ell_min to ell_max
+    centers = 0.5 * (edges[1:] + edges[:-1])            # Midpoint of each bin
 
-    cl = np.empty(nbins, dtype=np.float64)
-    dcl = np.empty(nbins, dtype=np.float64)
-    counts = np.empty(nbins, dtype=np.int64)
+    cl = np.empty(nbins, dtype=np.float64)      # Initialize array for the averaged c_ell in each bin
+    dcl = np.empty(nbins, dtype=np.float64)     # Initialize array for the uncertainty for each c_ell
+    counts = np.empty(nbins, dtype=np.int64)    # Initialize array for how many pixels fell into each bin
 
     # Flatten arrays for binning
     flat_ell = ell_2d.ravel()
@@ -148,89 +139,53 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
     flat_P = flat_P[mask_nonzero]
 
     # Bin the power spectrum radially in ell-space
-    inds = np.digitize(flat_ell, edges) - 1
+    inds = np.digitize(flat_ell, edges) - 1     # Use digitize to look at every ell and determine which bin it belongs to
     for i in range(nbins):
         sel = inds == i
         counts[i] = np.count_nonzero(sel)
         if counts[i] > 0:
             cl[i] = np.mean(flat_P[sel])
-            dcl[i] = cl[i] / np.sqrt(counts[i])  # simple uncertainty estimate
+            dcl[i] = cl[i] / np.sqrt(counts[i])
         else:
             cl[i] = np.nan
             dcl[i] = np.nan
 
-    # Save extra info
-    meta = dict(
-        N=int(N),
-        theta_max_rad=float(theta_max_rad),
-        dtheta_rad=float(dtheta),
-        area_rad2=float(area),
-        ell_min=float(ell_min),
-        ell_max=float(ell_max),
-        nbins=int(nbins),
-        nmodes=counts,
-        units_cl="microK^2",
-        note="Flat-sky FFT estimator: C_ell = <|FFT(T)*dtheta^2|^2>/Area, T in microK."
-    )
+    return centers, cl, dcl
 
-    return centers, cl, dcl, meta
-
-
-from powerbox.tools import get_power
-import numpy as np
 
 def compute_cl_powerbox(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
     """
-    Flat-sky C_ell using powerbox.get_power for a 2D temperature map (μK).
-
-    Parameters
-    ----------
-    map_uK : 2D array, temperature in microkelvin
-    theta_max_rad : float, full field-of-view size in radians
-    nbins : int, number of ell bins
-
-    Returns
-    -------
-    ell : 1D array of multipoles (≈ k for angular fields with boxlength in radians)
-    cl  : 1D array, C_ell in microK^2
-    dcl : 1D array, NaN placeholder (powerbox doesn't give Nmodes directly)
-    meta: dict, bookkeeping
+    Flat-sky C_ell using powerbox.get_power for a 2D temperature map (uK).
     """
+    # Get the map size
     N = map_uK.shape[0]
+
+    # Compute the angular size per pixel
     dtheta = theta_max_rad / N  # radians per pixel
 
-    # IMPORTANT: get_power returns (p_k, meank), i.e., (Pk, k)
+    # Call Powerbox get_power() function to compute the power spectrum
     Pk, k = get_power(
-        map_uK,
-        boxlength=theta_max_rad,   # the box length is the angular size (radians)
-        bins=nbins,
-        log_bins=False,
-        bin_ave=True,
-        ignore_zero_mode=True,
-        bins_upto_boxlen=True      # silence the future warning
+        map_uK,                     # Input map
+        boxlength=theta_max_rad,    # The total size of the map in radians
+        bins=nbins,                 # Number of bins
+        log_bins=False,             # Use linearly spaced bins
+        bin_ave=True,               # Report the average k in each bin instead of bin edges
+        ignore_zero_mode=True,      # Exclude the DC component
+        bins_upto_boxlen=True       # Ensure bins span up to the box smallest dimension
     )
 
-    # With the default cosmology Fourier convention (e^{i k x}),
-    # k is in rad^{-1}. For a sky patch whose length unit IS radians,
-    # the flat-sky multipole is ℓ ≈ k (no extra 2π factor needed).
+    # Powerbox output k is approximately equal to ell
     ell = k.copy()
-    cl  = Pk.copy()               # already μK^2 since map_uK is μK
+    # Copy the power spectrum
+    cl  = Pk.copy()
+    # Initialize the uncertainty array with NaNs to match manual calculation format
     dcl = np.full_like(cl, np.nan)
 
-    meta = dict(
-        N=int(N),
-        dtheta_rad=float(dtheta),
-        theta_max_rad=float(theta_max_rad),
-        nbins=int(nbins),
-        method="powerbox.get_power (Pk,k)",
-        ell_min_expected=float(2.0*np.pi/theta_max_rad),
-        ell_min_measured=float(ell[1] if ell[0]==0 else ell[0])  # quick peek
-    )
-    return ell, cl, dcl, meta
+    return ell, cl, dcl
 
 
 # -----------------------------------------------------------------------------
-#               COMPUTE D_ELL = ell*(ell+1)*C_ELL/(2*pi)
+#               Compute d_ell = ell*(ell+1)*C_ELL/(2*pi)
 # -----------------------------------------------------------------------------
 def compute_dl(ell: np.ndarray, cl: np.ndarray) -> np.ndarray:
     """
@@ -245,7 +200,7 @@ def compute_dl(ell: np.ndarray, cl: np.ndarray) -> np.ndarray:
 
 
 # -----------------------------------------------------------------------------
-#                                   MAIN
+#                                  Main
 # -----------------------------------------------------------------------------
 def main():
     # Resolve file paths
@@ -306,13 +261,16 @@ def main():
 
             # if choice == "1":
             #     # Compute flat-sky angular power spectrum using manual calculations
-            #     ell, cl_ksz, dcl, meta = compute_cl_flat_sky(map_uK, theta_max_rad, NBINS)
+            #     ell, cl_ksz, dcl = compute_cl_flat_sky(map_uK, theta_max_rad, NBINS)
             # elif choice == "2":
             #     # Compute flat-sky angular power spectrum using powerbox
-            #     ell, cl_ksz, dcl, meta = compute_cl_powerbox(map_uK, theta_max_rad, NBINS)
+            #     ell, cl_ksz, dcl = compute_cl_powerbox(map_uK, theta_max_rad, NBINS)
+
+            # Compute flat-sky angular power spectrum using manual calculations
+            ell, cl_ksz, dcl = compute_cl_flat_sky(map_uK, theta_max_rad, NBINS)
 
             # Compute flat-sky angular power spectrum using powerbox
-            ell, cl_ksz, dcl, meta = compute_cl_powerbox(map_uK, theta_max_rad, NBINS)
+            # ell, cl_ksz, dcl = compute_cl_powerbox(map_uK, theta_max_rad, NBINS)
 
             # Compute D_ell from C_ell
             dl_ksz = compute_dl(ell, cl_ksz)
@@ -323,20 +281,6 @@ def main():
             grp.create_dataset("cl_ksz", data=cl_ksz)
             grp.create_dataset("dcl", data=dcl)
             grp.create_dataset("dl_ksz", data=dl_ksz)
-
-            # Store metadata for reproducibility
-            m = grp.create_group("metadata")
-            m.attrs["Tcmb0_K"] = float(tcmb0)
-            m.attrs["theta_max_rad"] = float(theta_max_rad)
-            m.attrs["Npix"] = int(map_uK.shape[0])
-            m.attrs["units_cl"] = "microK^2"
-            m.attrs["units_dl"] = "microK^2"
-
-            for k, v in meta.items():
-                try:
-                    m.attrs[k] = v
-                except TypeError:
-                    m.create_dataset(k, data=v)
 
             print(f"[OK] {sim_name}: wrote /cl (ell, cl_ksz, dcl, dl_ksz)")
 
