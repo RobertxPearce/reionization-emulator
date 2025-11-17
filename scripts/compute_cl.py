@@ -104,12 +104,18 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
     # The kSZ map has "sharp" edges and so when Fourier Transform
     # is applied there will be a large variance as beyond the image
     # the value will be 0.
+    #
+    # The Hann window function will reduce the overall power. A
+    # normalization factor is computed to undo the loss.
     #--------------------------------------------------------------
 
     # Apply a 2D window function before FFT
     window = np.hanning(N)
     window_2d = np.outer(window, window)
     T *= window_2d
+
+    # Normalize factor for the window
+    window_norm = np.sum(window_2d**2) / (N**2)
 
     #--------------------------------------------------------------
     # Remove the Map Mean and NaNs
@@ -245,6 +251,16 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
         else:
             cl[i] = np.nan                      # If no modes fell into bin put NaN
             dcl[i] = np.nan                     # If no modes fell into bin put NaN
+
+    #--------------------------------------------------------------
+    # Correct for the Window Function
+    #
+    # The Hann window will reduce the overall power. Dividing by
+    # the normalization factor will undo this reduction in power.
+    #--------------------------------------------------------------
+
+    cl = cl / window_norm
+    dcl = dcl / window_norm
 
     return centers, cl, dcl
 
