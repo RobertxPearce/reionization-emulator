@@ -5,6 +5,8 @@ scipy
 matplotlib
 seaborn
 h5py
+
+# Power Spectrum
 powerbox
 
 # ML / Emulator Tools

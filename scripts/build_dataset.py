@@ -1,16 +1,14 @@
-#-------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------
 # Build data set for emulator. Extract ksz_map, pk_tt, xmval_list, zval_list, alpha_zre, 
 # kb_zre, and zmean_zre into HDF5
 # Robert Pearce
-#-------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------
 
 from pathlib import Path
 import numpy as np
 import h5py
 
-# ============================================================================
-#                              Constant Paths
-# ============================================================================
+
 # Path to parent sim directory
 SIM_DIR = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/raw/sims_v5")
 
@@ -18,9 +16,6 @@ SIM_DIR = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/raw/sim
 OUTPUT_FILE = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/processed/proc_sims_v5.h5")
 
 
-# ----------------------------------------------------------------------------
-#                               File discovery
-# ----------------------------------------------------------------------------
 def find_files(sim_dir: Path):
     """
     Return (obs_file, pk_file) within single simulation directory (sim<n>)
@@ -45,9 +40,6 @@ def find_files(sim_dir: Path):
     return obs_file, pk_file
 
 
-# ----------------------------------------------------------------------------
-#                               Readers
-# ----------------------------------------------------------------------------
 def _read_header_scalar(hdr, name: str):
     """
     Read scalar from header dataset; return NaN if missing.
@@ -104,9 +96,6 @@ def read_obs_fields(path: Path):
     return dict(ksz_map=ksz)
 
 
-# ----------------------------------------------------------------------------
-#                                   Writer
-# ----------------------------------------------------------------------------
 def write_sim_group(g: h5py.Group, payload: dict):
     """
     Write one simulation into group g
@@ -129,9 +118,6 @@ def write_sim_group(g: h5py.Group, payload: dict):
     go.create_dataset("tau",        data=float(payload["tau"]))
 
 
-# ----------------------------------------------------------------------------
-#                               Validation
-# ----------------------------------------------------------------------------
 def validate_all_fields(sim_name: str, payload: dict):
     """
     Ensure all required fields exist and arrays are non-empty
@@ -151,9 +137,6 @@ def validate_all_fields(sim_name: str, payload: dict):
         raise ValueError(f"{sim_name}: ksz_map is empty.")
 
 
-# ----------------------------------------------------------------------------
-#                                   Main
-# ----------------------------------------------------------------------------
 def main():
     # Resolve to absolute paths
     root = SIM_DIR.expanduser().resolve()
