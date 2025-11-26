@@ -14,7 +14,7 @@ from powerbox.tools import get_power
 # =============================================================================
 SIM_DIR = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/raw/sims_v5")
 PROC_H5 = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/processed/proc_sims_v5.h5")
-NBINS = 50  # Number of ell bins for the azimuthal averaging
+NBINS = 15  # Number of ell bins for averaging
 
 
 # -----------------------------------------------------------------------------
