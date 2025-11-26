@@ -9,6 +9,7 @@ from pathlib import Path
 import numpy as np
 from powerbox.tools import get_power
 
+
 # =============================================================================
 #                              CONSTANTS
 # =============================================================================
@@ -90,15 +91,15 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
     Compute the flat-sky angular power spectrum from a 2D temperature map.
     """
 
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     # Input
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
 
     # Make a float64 copy of the map and read its size
     T = np.array(map_uK, dtype=np.float64, copy=True)
     N = T.shape[0]
 
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     # Apply Windowing
     #
     # The kSZ map has "sharp" edges and so when Fourier Transform
@@ -107,7 +108,7 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
     #
     # The Hann window function will reduce the overall power. A
     # normalization factor is computed to undo the loss.
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
 
     # Apply a 2D window function before FFT
     window = np.hanning(N)
@@ -117,35 +118,35 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
     # Normalize factor for the window
     window_norm = np.sum(window_2d**2) / (N**2)
 
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     # Remove the Map Mean and NaNs
     #
     # The mean is (ell = 0) and can cause a spike at ell = 0 and
     # when averaging the ell = 0 will be in the smaller ell bins.
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
 
     # Remove the mean to avoid a spike at ell = 0
     T -= np.nanmean(T)
     # Replace any NaNs with zeros
     T = np.nan_to_num(T, copy=False)
 
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     # Angular Pixel Size and Area
     #
     # Fourier transforms measure frequency per unit distance.
     # Since the kSZ map is in angles the pixels and area must be
     # converted to radians so the FFT gives frequencies per radian.
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
 
     # Compute the pixel size in radians per pixel
     dtheta = theta_max_rad / N
     # Compute the total patch area
     area = theta_max_rad * theta_max_rad
 
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     # Build the Fourier (multipole) Grid
     #
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
 
     # Compute Fast Fourier Transform frequencies and convert to multipoles (ell = 2 * pi * f)
     fx = np.fft.fftfreq(N, d=dtheta)    # Returns frequency values corresponding to the x-axis
@@ -160,7 +161,7 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
 
     ell_2d = np.sqrt(Lx**2 + Ly**2)             # Compute the total angular wave number
 
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     # FFT to Raw 2D Power
     #
     # Numpys fft2() computes a discrete sum. The FFT needs to be
@@ -169,76 +170,76 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
     # each pixel will be assumed to have an area of 1.
     #
     #
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
 
     # Perform 2D FFT and normalize
     T_tilde = np.fft.fft2(T) * (dtheta**2)          # Compute the 2D FFT and normalize
 
     P2D = (T_tilde * np.conj(T_tilde)).real / area  # Get power for each angular mode and normalize to uK^2
 
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     # Define the ell Range and Bins
     #
     # The min and max will set the largest (min) and smallest (max)
     # structure the map can fit.
     # ell_min features that can be seen (the whole map)
     # ell_max tiniest features we can see (pixels size)
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
 
     # Define ell range and bins
     ell_min = 2.0 * np.pi / theta_max_rad               # Compute smallest ell (large-scale features)
     ell_max = ell_min * (N / 2.0)                       # Compute largest ell (small-scale structures)
 
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     # Create the bin edges and centers
     #
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
 
     edges = np.linspace(ell_min, ell_max, nbins + 1)    # Evenly spaced boundaries from ell_min to ell_max
     centers = 0.5 * (edges[1:] + edges[:-1])            # Midpoint of each bin
 
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     # Create the bin edges and centers
     #
     # cl[i] is the average pawer (Cl) in bin i
     # dcl[i] the estimated uncertainty for that bin
     # counts[i] how many Fourier pixels (modes) landed in that bin
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
 
     cl = np.empty(nbins, dtype=np.float64)      # Initialize array for the averaged c_ell in each bin
     dcl = np.empty(nbins, dtype=np.float64)     # Initialize array for the uncertainty for each c_ell
     counts = np.empty(nbins, dtype=np.int64)    # Initialize array for how many pixels fell into each bin
 
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     # Flatten
     #
     # ell_2d contains the ell value for every pixel
     # P2D contains the corresponding power value for that pixel
     # Flattening them creates two 1D arrays that represent the ell
     # and power for a specific pixel at i.
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
 
     # Flatten arrays for binning
     flat_ell = ell_2d.ravel()
     flat_P = P2D.ravel()
 
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     # Drop the Zero Mode
     #
     # Create a mask that only keeps elements greater than 0. This
     # will ensure only meaningful modes that represent actual
     # fluctuations in the map are present.
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
 
     # Ignore the zero mode
     mask_nonzero = flat_ell > 0
     flat_ell = flat_ell[mask_nonzero]
     flat_P = flat_P[mask_nonzero]
 
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     # Bin the Power Spectrum in ell-Space
     #
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
 
     # Bin the power spectrum radially in ell-space
     inds = np.digitize(flat_ell, edges) - 1     # Use digitize to look at every ell and determine which bin it belongs to
@@ -252,12 +253,12 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
             cl[i] = np.nan                      # If no modes fell into bin put NaN
             dcl[i] = np.nan                     # If no modes fell into bin put NaN
 
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
     # Correct for the Window Function
     #
     # The Hann window will reduce the overall power. Dividing by
     # the normalization factor will undo this reduction in power.
-    #--------------------------------------------------------------
+    # --------------------------------------------------------------
 
     cl = cl / window_norm
     dcl = dcl / window_norm
@@ -401,3 +402,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+#-----------------------------
+#         END OF FILE
+#-----------------------------
