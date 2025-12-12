@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------------------
 # Build data set for emulator. Extract ksz_map, pk_tt, xmval_list, zval_list, alpha_zre, 
-# kb_zre, and zmean_zre into HDF5
+# kb_zre, zmean_zre, and b0 into HDF5
 # Robert Pearce
 # ------------------------------------------------------------------------------------------
 
@@ -90,10 +90,13 @@ def read_obs_fields(path: Path):
     """
     From OBS GRIDS:
         Array: ksz_map
+        Scallars: tcmb0, theta_max_ksz
     """
     with h5py.File(path, "r") as f:
         ksz = f["data/ksz_map"][()]
-    return dict(ksz_map=ksz)
+        Tcmb0 = f["header/Tcmb0"][()]
+        theta_max_ksz = f["header/theta_max_ksz"][()]
+    return dict(ksz_map=ksz, Tcmb0=Tcmb0, theta_max_ksz=theta_max_ksz)
 
 
 def write_sim_group(g: h5py.Group, payload: dict):
@@ -104,14 +107,16 @@ def write_sim_group(g: h5py.Group, payload: dict):
     gp = g.create_group("params")
     go = g.create_group("output")
 
-    # Scalars
+    # Write simulation params to params subdirectory
     gp.create_dataset("alpha_zre",  data=float(payload["alpha_zre"]))
     gp.create_dataset("b0_zre",     data=float(payload["b0_zre"]))
     gp.create_dataset("kb_zre",     data=float(payload["kb_zre"]))
     gp.create_dataset("zmean_zre",  data=float(payload["zmean_zre"]))
 
-    # Arrays
+    # Write simulation outputs to output subdirectory
     go.create_dataset("ksz_map",    data=payload["ksz_map"],    compression="gzip", shuffle=True)
+    go.create_dataset("Tcmb0", data=float(payload["Tcmb0"]))
+    go.create_dataset("theta_max_ksz", data=float(payload["theta_max_ksz"]))
     go.create_dataset("pk_tt",      data=payload["pk_tt"],      compression="gzip", shuffle=True)
     go.create_dataset("xmval_list", data=payload["xmval_list"], compression="gzip", shuffle=True)
     go.create_dataset("zval_list",  data=payload["zval_list"],  compression="gzip", shuffle=True)
@@ -125,7 +130,8 @@ def validate_all_fields(sim_name: str, payload: dict):
     # List of keys needed
     required = [
         "ksz_map", "pk_tt", "xmval_list", "zval_list",
-        "alpha_zre", "b0_zre", "kb_zre", "zmean_zre", "tau",
+        "alpha_zre", "b0_zre", "kb_zre", "zmean_zre",
+        "tau", "Tcmb0", "theta_max_ksz",
     ]
     # Loops over each required key
     for key in required:
@@ -194,12 +200,26 @@ def main():
                 num_skipped += 1
                 continue
 
-            #
+            # Create explicit record for one simulation
             payload = {
-                **pk_payload,
-                "ksz_map": obs_payload["ksz_map"],
+                # Reionization parameters
+                "alpha_zre": pk_payload["alpha_zre"],
+                "b0_zre": pk_payload["b0_zre"],
+                "kb_zre": pk_payload["kb_zre"],
+                "zmean_zre": pk_payload["zmean_zre"],
+
+                # Tau
+                "tau": pk_payload["tau"],
+                "pk_tt": pk_payload["pk_tt"],
+
+                # Axis information
                 "xmval_list": pk_payload["xmval_list"],
-                "zval_list":  pk_payload["zval_list"],
+                "zval_list": pk_payload["zval_list"],
+
+                # kSZ map and data
+                "ksz_map": obs_payload["ksz_map"],
+                "Tcmb0": obs_payload["Tcmb0"],
+                "theta_max_ksz": obs_payload["theta_max_ksz"],
             }
 
             try:

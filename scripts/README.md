@@ -5,19 +5,19 @@
 
 
 - **`build_dataset.py`**  
-    Creates a dataset for the emulator by organizing the parameters and output into condensed HDF5 file.
+    Creates a self-contained dataset for angular power spectrum calculation and emulator by organizing raw simulation parameters and outputs into a condensed HDF5 file.
 
     ```
     Top-Level:
         ['sims']
-    Header:
+    sims:
         ['sim0'], ['sim1'], ['sim2'], ... , ['sim<n>']
     sim<n>:
         [params], [output], [cl]
     Params:
         ['alpha_zre', 'b0_zre', 'kb_zre', 'zmean_zre']
     Output:
-        ['ksz_map', 'pk_tt', 'tau', 'xmval_list', 'zval_list']
+        ['ksz_map', 'Tcmb0', 'theta_max_ksz', 'pk_tt', 'tau', 'xmval_list', 'zval_list']
     ```
 
 - **`compute_cl.py`**  
@@ -26,7 +26,7 @@
     ```
     Top-Level:
         ['sims']
-    Header:
+    sims:
         ['sim0'], ['sim1'], ['sim2'], ... , ['sim<n>']
     sim<n>:
         [params], [output], [cl]
