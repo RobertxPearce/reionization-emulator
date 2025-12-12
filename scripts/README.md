@@ -1,7 +1,7 @@
 # Available Scripts
 
 - **`run_simulations.py`**  
-    Generates parameters zmean, alpha and kbar using Latin Hypercube. Then runs the Fortran simulation executable.
+    Generates parameters zmean, alpha, kb and b0 using Latin Hypercube Sampling (LHS). Then runs the Fortran simulation executable.
 
 
 - **`build_dataset.py`**  

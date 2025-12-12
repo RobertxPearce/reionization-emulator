@@ -13,7 +13,7 @@ EXEC = Path("/jet/home/rpearce/software/ksz_2lpt/ksz_2lpt.x")
 OUT  = Path("~/ocean/raw/sims_v5").expanduser()
 
 # Number of samples / simulations
-NUM_SAMPLES = 100
+NUM_SAMPLES = 10
 # Seed for reproducible results
 SEED = 123
 
@@ -22,6 +22,7 @@ PARAMS = [
     ("zmean", 7.0, 9.0),
     ("alpha", 0.10, 0.90),
     ("kb",    0.10, 2.0),
+    ("b0", 0.40, 2.0),
 ]
 
 
@@ -62,6 +63,7 @@ def run_samples(samples, outroot):
             outdir.mkdir(parents=True, exist_ok=True)
             # Build the command
             out_prefix = str(outdir) + "/"
+            # ksz_2lpt expects: dir_out zmean_zre alpha_zre kb_zre b0_zre
             args = [str(EXEC), out_prefix] + [str(v) for v in row]
             # Run the executable
             rc = sp.run(args).returncode
