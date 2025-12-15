@@ -4,6 +4,10 @@
     Generates parameters zmean, alpha, kb and b0 using Latin Hypercube Sampling (LHS). Then runs the Fortran simulation executable.
 
 
+- **`lhs_one_param.py`**  
+    Generates Latin Hypercube samples for a single reionization parameter while keeping all other parameters fixed to constants or the midpoint.
+
+
 - **`build_dataset.py`**  
     Creates a self-contained dataset for angular power spectrum calculation and emulator by organizing raw simulation parameters and outputs into a condensed HDF5 file.
 
