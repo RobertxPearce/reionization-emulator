@@ -14,14 +14,14 @@
         ['sim0'], ['sim1'], ['sim2'], ... , ['sim<n>']
     sim<n>:
         [params], [output], [cl]
-    Params:
+    params:
         ['alpha_zre', 'b0_zre', 'kb_zre', 'zmean_zre']
-    Output:
+    output:
         ['ksz_map', 'Tcmb0', 'theta_max_ksz', 'pk_tt', 'tau', 'xmval_list', 'zval_list']
     ```
 
 - **`compute_cl.py`**  
-    Calculates the angular power spectrum (C_ell) from each kSZ map using either a manual flat-sky FFT method or the powerbox.get_power() fuinction. The resulting spectra (C_ell and D_ell) are stored in the processed HDF5 file under each simulation's /cl group.
+    Calculates the angular power spectrum (C_ell) from each kSZ map using a manual flat-sky FFT method. The resulting spectra (C_ell and D_ell) are stored in the processed HDF5 file under each simulation's /cl group.
 
     ```
     Top-Level:
@@ -30,11 +30,11 @@
         ['sim0'], ['sim1'], ['sim2'], ... , ['sim<n>']
     sim<n>:
         [params], [output], [cl]
-    Params:
+    params:
         ['alpha_zre', 'b0_zre', 'kb_zre', 'zmean_zre']
-    Output:
-        ['ksz_map', 'pk_tt', 'tau', 'xmval_list', 'zval_list']
-    Cl:
+    output:
+        ['ksz_map', 'Tcmb0', 'theta_max_ksz', 'pk_tt', 'tau', 'xmval_list', 'zval_list']
+    cl:
         ['cl_ksz', 'dcl', 'dl_ksz', 'ell']
     ```
 

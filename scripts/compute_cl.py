@@ -7,60 +7,13 @@
 import h5py
 from pathlib import Path
 import numpy as np
-from powerbox.tools import get_power
 
 
-SIM_DIR = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/raw/sims_v5")
 PROC_H5 = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/processed/proc_sims_v5.h5")
-NBINS = 15  # Number of ell bins for averaging
 
-
-def find_files(sim_dir: Path):
-    """
-    Finds the OBS and PK files inside a given simulation directory (sim<N>).
-
-    OBS file: contains "data/ksz_map"
-    PK  file: contains "data/pk_tt"
-    """
-    obs_file, pk_file = None, None
-    for fp in sorted(list(sim_dir.glob("*.h5")) + list(sim_dir.glob("*.hdf5"))):
-        try:
-            with h5py.File(fp, "r") as f:
-                if obs_file is None and "data/ksz_map" in f:
-                    obs_file = fp
-                if pk_file is None and "data/pk_tt" in f:
-                    pk_file = fp
-        except OSError:
-            continue
-    return obs_file, pk_file
-
-
-def read_tcmb0(obs_file: Path) -> float:
-    """
-    Read the CMB temperature (Tcmb0, in Kelvin) from the header.
-    """
-    with h5py.File(obs_file, "r") as f:
-        tcmb0 = f["header/Tcmb0"][()]
-    return float(np.asarray(tcmb0).squeeze())
-
-
-def read_ksz_map(obs_file: Path) -> np.ndarray:
-    """
-    Read the kSZ map from the data group.
-    """
-    with h5py.File(obs_file, "r") as f:
-        ksz = f["data/ksz_map"][()]
-    return np.asarray(ksz)
-
-
-def read_theta_max_rad(obs_file: Path) -> float:
-    """
-    Read theta_max_ksz (field-of-view size) in radians.
-    """
-    with h5py.File(obs_file, "r") as f:
-        th = f["header/theta_max_ksz"][()]
-    th = float(np.asarray(th).squeeze())
-    return th
+# Constants for computing angular power spectrum
+NBINS = 5           # Number of ell bins for averaging
+ELL_CUT = 1000.0    # The minimum multipole ell to be kept (ell < ELL_CUT is thrown away)
 
 
 def to_microkelvin(ksz_map_dt_over_t: np.ndarray, tcmb0_K: float) -> np.ndarray:
@@ -71,9 +24,12 @@ def to_microkelvin(ksz_map_dt_over_t: np.ndarray, tcmb0_K: float) -> np.ndarray:
     return (ksz_map_dt_over_t * tcmb0_K) * 1e6
 
 
-def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
+def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int, ell_cut: float):
     """
-    Compute the flat-sky angular power spectrum from a 2D temperature map.
+    Compute the flat-sky angular power spectrum from a kSZ map.
+        1. Compute the full-resolution C_ell with N/2 bins in ell.
+        2. Discard ell < ell_cut (e.g., 1000).
+        3. Average / rebin the remaining ell into nbins coarse bins.
     """
 
     # --------------------------------------------------------------
@@ -130,7 +86,6 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
 
     # --------------------------------------------------------------
     # Build the Fourier (multipole) Grid
-    #
     # --------------------------------------------------------------
 
     # Compute Fast Fourier Transform frequencies and convert to multipoles (ell = 2 * pi * f)
@@ -143,7 +98,6 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
 
     # Combine into a 2D grid
     Lx, Ly = np.meshgrid(lx, ly, indexing="xy") # 2D arrays representing lx and ly
-
     ell_2d = np.sqrt(Lx**2 + Ly**2)             # Compute the total angular wave number
 
     # --------------------------------------------------------------
@@ -153,17 +107,14 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
     # multiplied by dtheta^2 to approximate the integral. Without
     # this the power spectrum would have the wrong amplitude since
     # each pixel will be assumed to have an area of 1.
-    #
-    #
     # --------------------------------------------------------------
 
     # Perform 2D FFT and normalize
     T_tilde = np.fft.fft2(T) * (dtheta**2)          # Compute the 2D FFT and normalize
-
     P2D = (T_tilde * np.conj(T_tilde)).real / area  # Get power for each angular mode and normalize to uK^2
 
     # --------------------------------------------------------------
-    # Define the ell Range and Bins
+    # Define the ell Range and Full-Resolution Bins
     #
     # The min and max will set the largest (min) and smallest (max)
     # structure the map can fit.
@@ -172,28 +123,17 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
     # --------------------------------------------------------------
 
     # Define ell range and bins
-    ell_min = 2.0 * np.pi / theta_max_rad               # Compute smallest ell (large-scale features)
-    ell_max = ell_min * (N / 2.0)                       # Compute largest ell (small-scale structures)
+    ell_min = 2.0 * np.pi / theta_max_rad   # Compute smallest ell (large-scale features)
+    ell_max = ell_min * (N / 2.0)           # Compute largest ell (small-scale structures)
+
+    nbins_full = N // 2                     # Full-resolution bins
 
     # --------------------------------------------------------------
-    # Create the bin edges and centers
-    #
+    # Create the full-res bin edges and centers
     # --------------------------------------------------------------
 
-    edges = np.linspace(ell_min, ell_max, nbins + 1)    # Evenly spaced boundaries from ell_min to ell_max
-    centers = 0.5 * (edges[1:] + edges[:-1])            # Midpoint of each bin
-
-    # --------------------------------------------------------------
-    # Create the bin edges and centers
-    #
-    # cl[i] is the average pawer (Cl) in bin i
-    # dcl[i] the estimated uncertainty for that bin
-    # counts[i] how many Fourier pixels (modes) landed in that bin
-    # --------------------------------------------------------------
-
-    cl = np.empty(nbins, dtype=np.float64)      # Initialize array for the averaged c_ell in each bin
-    dcl = np.empty(nbins, dtype=np.float64)     # Initialize array for the uncertainty for each c_ell
-    counts = np.empty(nbins, dtype=np.int64)    # Initialize array for how many pixels fell into each bin
+    edges = np.linspace(ell_min, ell_max, nbins_full + 1)  # Evenly spaced boundaries from ell_min to ell_max
+    centers = 0.5 * (edges[1:] + edges[:-1])               # Midpoint of each full-res bin
 
     # --------------------------------------------------------------
     # Flatten
@@ -222,21 +162,76 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
     flat_P = flat_P[mask_nonzero]
 
     # --------------------------------------------------------------
-    # Bin the Power Spectrum in ell-Space
-    #
+    # Initialize cl, dcl, counts
     # --------------------------------------------------------------
 
-    # Bin the power spectrum radially in ell-space
-    inds = np.digitize(flat_ell, edges) - 1     # Use digitize to look at every ell and determine which bin it belongs to
-    for i in range(nbins):                      # Loop through each ell bin
+    cl = np.empty(nbins_full, dtype=np.float64)      # Full-res averaged C_ell in each bin
+    dcl = np.empty(nbins_full, dtype=np.float64)     # Full-res uncertainties
+    counts = np.empty(nbins_full, dtype=np.int64)    # How many modes per full-res bin
+
+    # --------------------------------------------------------------
+    # Full resolution binning: N/2 ell-bins
+    # --------------------------------------------------------------
+
+    inds = np.digitize(flat_ell, edges) - 1     # Use digitize to look at every ell and determine which bin it belongs too
+
+    for i in range(nbins_full):                 # Loop through each full-res ell bin
         sel = inds == i                         # Select only the Fourier modes belonging to bin i
         counts[i] = np.count_nonzero(sel)       # Count how many pixels fell into bin i
         if counts[i] > 0:
-            cl[i] = np.mean(flat_P[sel])        # Select all power values whos ell fall in that bin and compute their average
-            dcl[i] = cl[i] / np.sqrt(counts[i]) # Compute the standard error of the mean
+            cl[i] = np.mean(flat_P[sel])        # Average power in this full-res bin
+            dcl[i] = cl[i] / np.sqrt(counts[i]) # Standard error of the mean
         else:
             cl[i] = np.nan                      # If no modes fell into bin put NaN
-            dcl[i] = np.nan                     # If no modes fell into bin put NaN
+            dcl[i] = np.nan
+
+    # --------------------------------------------------------------
+    # Cut at ell_cut and rebin into nbins coarse bins
+    #   1) Keep only centers >= ell_cut
+    #   2) Re-aggregate into nbins bins over that high-ell range
+    # --------------------------------------------------------------
+
+    # Keep only high-ell part of the full-resolution spectrum
+    mask_high = centers >= ell_cut      # Boolean array containing if each entry is >= ell_cut
+    ell_high = centers[mask_high]       # Keep only ell bin centers >= ell_cut
+    cl_high = cl[mask_high]             # Keep only the cl for ell bin centers >= ell_cut
+    dcl_high = dcl[mask_high]           # Keep only the dl for ell bin centers >= ell_cut
+    counts_high = counts[mask_high]     # Keep the number of Fourier modes contributing to each high ell bin
+
+    # If nbins >= number of available high-ell bins, just return the high-res part
+    if nbins >= len(ell_high):
+        centers = ell_high
+        cl = cl_high
+        dcl = dcl_high
+    else:
+        # New coarse bin edges and centers over the high-ell range
+        edges_coarse = np.linspace(ell_high[0], ell_high[-1], nbins + 1)
+        centers_coarse = 0.5 * (edges_coarse[1:] + edges_coarse[:-1])
+
+        cl_coarse = np.empty(nbins, dtype=np.float64)
+        dcl_coarse = np.empty(nbins, dtype=np.float64)
+        counts_coarse = np.empty(nbins, dtype=np.int64)
+
+        # Which coarse bin each high-ell bin belongs to
+        inds_coarse = np.digitize(ell_high, edges_coarse) - 1
+
+        for j in range(nbins):
+            sel2 = inds_coarse == j
+            # Total number of Fourier modes contributing to this coarse bin
+            w = counts_high[sel2]
+            counts_coarse[j] = w.sum()
+            if counts_coarse[j] > 0:
+                # Weighted average of cl_high using counts as weights
+                cl_coarse[j] = np.average(cl_high[sel2], weights=w)
+                dcl_coarse[j] = cl_coarse[j] / np.sqrt(counts_coarse[j])
+            else:
+                cl_coarse[j] = np.nan
+                dcl_coarse[j] = np.nan
+
+        # Save to centers, cl and dcl
+        centers = centers_coarse
+        cl = cl_coarse
+        dcl = dcl_coarse
 
     # --------------------------------------------------------------
     # Correct for the Window Function
@@ -249,37 +244,6 @@ def compute_cl_flat_sky(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
     dcl = dcl / window_norm
 
     return centers, cl, dcl
-
-
-def compute_cl_powerbox(map_uK: np.ndarray, theta_max_rad: float, nbins: int):
-    """
-    Flat-sky C_ell using powerbox.get_power for a 2D temperature map (uK).
-    """
-    # Get the map size
-    N = map_uK.shape[0]
-
-    # Compute the angular size per pixel
-    dtheta = theta_max_rad / N  # radians per pixel
-
-    # Call Powerbox get_power() function to compute the power spectrum
-    Pk, k = get_power(
-        map_uK,                     # Input map
-        boxlength=theta_max_rad,    # The total size of the map in radians
-        bins=nbins,                 # Number of bins
-        log_bins=False,             # Use linearly spaced bins
-        bin_ave=True,               # Report the average k in each bin instead of bin edges
-        ignore_zero_mode=True,      # Exclude the DC component
-        bins_upto_boxlen=True       # Ensure bins span up to the box smallest dimension
-    )
-
-    # Powerbox output k is approximately equal to ell
-    ell = k.copy()
-    # Copy the power spectrum
-    cl  = Pk.copy()
-    # Initialize the uncertainty array with NaNs to match manual calculation format
-    dcl = np.full_like(cl, np.nan)
-
-    return ell, cl, dcl
 
 
 def compute_dl(ell: np.ndarray, cl: np.ndarray) -> np.ndarray:
@@ -295,87 +259,65 @@ def compute_dl(ell: np.ndarray, cl: np.ndarray) -> np.ndarray:
 
 
 def main():
-    # Resolve file paths
-    root = SIM_DIR.expanduser().resolve()
+    # Resolve PROC_H5 to an absolute path
     proc_path = PROC_H5.expanduser().resolve()
 
-    # Check if paths exist
-    if not root.exists():
-        raise SystemExit(f"Input folder not found: {root}")
+    # Error if processed path does not exist
     if not proc_path.exists():
         raise SystemExit(f"Processed HDF5 not found: {proc_path}")
 
-    # Find all subdirectories that start with "sim"
-    sim_dirs = sorted([d for d in root.iterdir() if d.is_dir() and d.name.startswith("sim")])
-    if not sim_dirs:
-        raise SystemExit(f"No sim* directories found in {root}")
-
+    # Open the processed HDF5 in read/write mode
     with h5py.File(proc_path, "r+") as proc:
+        # Check that top-level group exist
         if "sims" not in proc:
             raise SystemExit("Processed file is missing top-level group '/sims'")
+
+        # Create reference for group containing all simulations
         sims_grp = proc["sims"]
 
-        # Choose to use manual or powerbox computation
-        # choice = input("Manual Calculation (1) or PowerBox (2): ")
-        # if choice != "1" and choice != "2":
-        #     raise SystemExit(f"Invalid choice {choice}")
-
-        # Loop over each simulation folder
-        for sim_dir in sim_dirs:
-            sim_name = sim_dir.name
+        # Loop over each simulation present in dataset
+        for sim_name in sorted(sims_grp.keys()):
             print(f"Processing {sim_name} ...")
 
-            # Skip if simulation is not in processed file
-            if sim_name not in sims_grp:
-                print(f"[SKIP] {sim_name}: not present in processed file")
-                continue
+            # Create reference for group corresponding to simulation
+            sim_grp = sims_grp[sim_name]
 
+            # Create reference for subgroup containing simulation outputs
+            out_grp = sim_grp["output"]
+
+            # Load kSZ map, tcmb0, and theta_max_ksz from processed dataset
+            ksz = np.asarray(out_grp["ksz_map"][()])
+            tcmb0 = float(np.asarray(out_grp["Tcmb0"][()]).squeeze())
+            theta_max_rad = float(np.asarray(out_grp["theta_max_ksz"][()]).squeeze())
+
+            # Define path where angular power spectrum will be stored
             cl_group_path = f"/sims/{sim_name}/cl"
 
-            # Remove existing /cl group if it exists
+            # If the path already exists delete to be replaced
             if cl_group_path in proc:
                 del proc[cl_group_path]
                 print(f"[REPLACE] {sim_name}: existing /cl group removed")
 
-            # Find the original OBS file that contains the kSZ map
-            obs_file, _ = find_files(sim_dir)
-            if obs_file is None:
-                print(f"[SKIP] {sim_name}: OBS file with data/ksz_map not found")
-                continue
-
-            # Read data from the OBS file
-            tcmb0 = read_tcmb0(obs_file)
-            theta_max_rad = read_theta_max_rad(obs_file)
-            ksz = read_ksz_map(obs_file)
-
             # Convert deltaT/T to microkelvin
             map_uK = to_microkelvin(ksz, tcmb0)
 
-            # if choice == "1":
-            #     # Compute flat-sky angular power spectrum using manual calculations
-            #     ell, cl_ksz, dcl = compute_cl_flat_sky(map_uK, theta_max_rad, NBINS)
-            # elif choice == "2":
-            #     # Compute flat-sky angular power spectrum using powerbox
-            #     ell, cl_ksz, dcl = compute_cl_powerbox(map_uK, theta_max_rad, NBINS)
+            # Compute the angular power spectrum using manual calculation
+            ell, cl_ksz, dcl = compute_cl_flat_sky(map_uK, theta_max_rad, NBINS, ELL_CUT)
 
-            # Compute flat-sky angular power spectrum using manual calculations
-            ell, cl_ksz, dcl = compute_cl_flat_sky(map_uK, theta_max_rad, NBINS)
-
-            # Compute flat-sky angular power spectrum using powerbox
-            # ell, cl_ksz, dcl = compute_cl_powerbox(map_uK, theta_max_rad, NBINS)
-
-            # Compute D_ell from C_ell
+            # Convert C_ell to D_ell
             dl_ksz = compute_dl(ell, cl_ksz)
 
-            # Create new group in HDF5 and store results
+            # Store results
             grp = proc.create_group(cl_group_path)
             grp.create_dataset("ell", data=ell)
             grp.create_dataset("cl_ksz", data=cl_ksz)
             grp.create_dataset("dcl", data=dcl)
             grp.create_dataset("dl_ksz", data=dl_ksz)
 
+            # Print success for this simulation
             print(f"[OK] {sim_name}: wrote /cl (ell, cl_ksz, dcl, dl_ksz)")
 
+    # Final message once all sims have be completed
     print("[OK] All done.")
 
 
