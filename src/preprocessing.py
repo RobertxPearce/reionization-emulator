@@ -12,6 +12,10 @@ from pathlib import Path
 H5_PATH = "../data/processed/proc_sims_v5.h5"
 OUTPUT_PATH = "../data/processed/emulator_dataset_v1.npz"
 
+# Constant to adjust input for emulator
+# 3 (alpha, kb, z_mean) / 4 (alpha, kb, z_mean, b0)
+INPUT_PARAMS = 3
+
 
 def get_sim_ids(h5_file):
     """
@@ -38,7 +42,7 @@ def main():
 
         # Prepare containers for sim count, input parameters, and output d_ell
         N = len(sim_ids)
-        X = np.zeros((N, 4), dtype=np.float64)
+        X = np.zeros((N, INPUT_PARAMS), dtype=np.float64)
         Y = np.zeros((N, N_bins), dtype=np.float64)
 
         # Loop over sims and save params and d_ell
@@ -49,9 +53,12 @@ def main():
             alpha = float(sim["params"]["alpha_zre"][()])
             kb = float(sim["params"]["kb_zre"][()])
             zmean = float(sim["params"]["zmean_zre"][()])
-            b0 = float(sim["params"]["b0_zre"][()])
-
-            X[i] = [zmean, alpha, kb, b0]
+            # Check if b0 should be included
+            if INPUT_PARAMS == 4:
+                b0 = float(sim["params"]["b0_zre"][()])
+                X[i] = [zmean, alpha, kb, b0]
+            else:
+                X[i] = [zmean, alpha, kb]
 
             # Load spectrum
             ell = sim["cl"]["ell"][()]
