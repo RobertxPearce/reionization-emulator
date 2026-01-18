@@ -10,10 +10,10 @@ import h5py
 
 
 # Path to parent sim directory
-SIM_DIR = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/raw/sims_v5")
+SIM_DIR = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/b0_tests")
 
 # Output File
-OUTPUT_FILE = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/processed/proc_sims_v5.h5")
+OUTPUT_FILE = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/processed/proc_b0_tests.h5")
 
 
 def find_files(sim_dir: Path):

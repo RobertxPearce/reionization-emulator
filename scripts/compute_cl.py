@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 
 
-PROC_H5 = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/processed/proc_sims_v5.h5")
+PROC_H5 = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/processed/proc_b0_tests.h5")
 
 # Constants for computing angular power spectrum
 NBINS = 5           # Number of ell bins for averaging
