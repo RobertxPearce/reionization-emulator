@@ -5,7 +5,7 @@
 
 
 - **`preprocessing.py`**  
-    Loads processed simulation data, extracts parameters and spectra, applies a log transform to the power spectrum, and builds the final emulator dataset (**params**, **log(d_ell)**, **ell**).
+    Loads processed simulation data, extracts parameters and spectra, applies a log transform to the binned power spectrum, and builds the final emulator dataset (**params**, **log(d_ell)**, **ell**).
 
 
 - **`emulator.py`**  
@@ -21,3 +21,21 @@
 
 
 ## Current Metrics
+
+### Proof-of-Concept Model
+The following figures summarize the performance of the proof-of-concept kSZ emulator on held-out test simulations.
+
+#### True vs Predicted Line Comparison
+The emulator captures the overall shape across $\ell$.
+
+![true-vs-predicted-dl-line.png](../results/proof_of_concept/true-vs-predicted-dl-line.png)
+
+#### Bin-by-Bin Comparison
+Bar chart comparison of the true vs predicted values for the same test simulation, showing per-bin agreement amplitude.
+
+![true-vs-predicted-dl-bar.png](../results/proof_of_concept/true-vs-predicted-dl-bar.png)
+
+#### Test Set Error Distribution
+Histogram to show the distribution of mean relative errors (averaged over ell bins) for held-out test simulations. 
+
+![test-set-error-dist.png](../results/proof_of_concept/test-set-error-dist.png)

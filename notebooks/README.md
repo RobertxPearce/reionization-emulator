@@ -7,3 +7,6 @@
 - **`proc_data_vis.ipynb`**  
     Loads the processed dataset containing all simulation outputs, summarizes key parameters and statistics, and visualizes relationships between the reionization parameters and optical depth (Tau) through histograms, scatter plots, and correlation analysis to identify parameter dependencies and trends.
 
+
+- **`proof_of_concept`**  
+    Demonstrates a proof-of-concept emulator that predicts the binned kSZ angular power spectrum from reionization parameters and evaluates performance on held-out simulations.
