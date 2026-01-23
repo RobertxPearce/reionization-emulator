@@ -38,4 +38,4 @@ Bar chart comparison of the true vs predicted values for the same test simulatio
 #### Test Set Error Distribution
 Histogram to show the distribution of mean relative errors (averaged over ell bins) for held-out test simulations. 
 
-![test-set-error-dist.png](../results/proof_of_concept/test-set-error-dist.png)
+![test-set-error-distribution.png](../results/proof_of_concept/test-set-error-distribution.png)

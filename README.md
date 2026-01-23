@@ -15,7 +15,7 @@ By simulating this process and computing the **angular power spectrum**, we can 
       - `alpha_zre` - Controls how long reionization lasts. Bounded: [0.10 - 0.90] 
       - `kb_zre` Determines how uneven the ionized regions are (higher values more clustered). Bounded: [0.10 - 2.0]
       - `z_mean` Sets the midpoint of reionization. Bounded: [7.0 - 9.0]
-      - `b0_zre` Adjusts the overall strength or amplitude of the ionization field. Constant:
+      - `b0_zre` Adjusts the overall strength or amplitude of the ionization field. Bounded: [0.10 - 0.80]
     - **Simulation Output**
       - `tau` - The optical depth to reionization; measures how many CMB photons were scattered by free electrons.
       - `ksz_map` - A 2D map of temperature fluctuations caused by the kinematic Sunyaev–Zel’dovich effect.
