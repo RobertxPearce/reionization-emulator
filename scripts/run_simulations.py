@@ -10,10 +10,10 @@ from scipy.stats import qmc
 
 # Path to simulation executable and output directory
 EXEC = Path("/jet/home/rpearce/software/ksz_2lpt/ksz_2lpt.x")
-OUT  = Path("~/ocean/raw/sims_v5").expanduser()
+OUT  = Path("~/ocean/raw/sims_v6").expanduser()
 
 # Number of samples / simulations
-NUM_SAMPLES = 10
+NUM_SAMPLES = 1_000
 # Seed for reproducible results
 SEED = 123
 
@@ -54,7 +54,7 @@ def run_samples(samples, outroot):
     log_path = outroot / "sim_log.txt"
     with log_path.open("w") as log:
         # Write header line
-        log.write("sim_id\tzmean\talpha\tkb\trc\n")
+        log.write("sim_id\tzmean\talpha\tkb\tb0\trc\n")
 
         # Loop over all rows of the samples array
         for i, row in enumerate(samples):
@@ -68,7 +68,7 @@ def run_samples(samples, outroot):
             # Run the executable
             rc = sp.run(args).returncode
             # Write run info to log (tab-separated)
-            log.write(f"sim{i}\t{row[0]}\t{row[1]}\t{row[2]}\t{rc}\n")
+            log.write(f"sim{i}\t{row[0]}\t{row[1]}\t{row[2]}\t{row[3]}\t{rc}\n")
             log.flush()
             # Print progress: run number + return code
             print(f"[{i+1}/{len(samples)}] rc={rc}")

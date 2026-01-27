@@ -7,7 +7,7 @@
 import numpy as np
 import torch
 
-from emulator import ProofOfConceptEmulator
+from emulator import ProofOfConceptEmulatorThreeParams
 
 
 MODEL_PATH = "../models/v1/proof_of_concept.pt"
@@ -31,7 +31,7 @@ def load_model():
     ell = np.load(f"{NORM_PATH}/ell.npy")
 
     # Create model and load weights
-    model = ProofOfConceptEmulator().to(device)
+    model = ProofOfConceptEmulatorThreeParams().to(device)
     state_dict = torch.load(MODEL_PATH, map_location=device)
     model.load_state_dict(state_dict)
     model.eval()

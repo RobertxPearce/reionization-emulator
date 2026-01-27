@@ -42,12 +42,3 @@ cd $SCRIPT_DIR
 
 # Run Python inside the conda env
 "$MAMBA" run -n simenv python "$SCRIPT_DIR/run_simulations.py"
-
-# Activate environment
-# mamba activate simenv
-
-# Run the Python script
-# python run_simulations.py
-
-# Deactivate environment
-# conda deactivate

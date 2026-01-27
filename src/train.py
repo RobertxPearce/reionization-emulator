@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader
 
-from emulator import ProofOfConceptEmulator
+from emulator import ProofOfConceptEmulatorThreeParams
 
 
 DATA_PATH = "../data/processed/emulator_dataset_v1.npz"
@@ -101,7 +101,7 @@ def main():
     train_loader, val_loader, test_loader, X_mean, X_std, ell = load_data()
 
     # Set the model, loss, and optimizer
-    model = ProofOfConceptEmulator().to(device)
+    model = ProofOfConceptEmulatorThreeParams().to(device)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)
 
