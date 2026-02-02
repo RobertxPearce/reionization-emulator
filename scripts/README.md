@@ -1,11 +1,19 @@
 # Available Scripts
 
+- **`lhs_one_param.py`**  
+    Generates Latin Hypercube samples for a single reionization parameter while keeping all other parameters fixed to constants or the midpoint.
+
+
+- **`lhs_four_params.py`**  
+    Generates Latin Hypercube samples for the four reionization parameters (zmean, alpha, kb, and b0) and save to a txt file.
+
+
 - **`run_simulations.py`**  
     Generates parameters zmean, alpha, kb and b0 using Latin Hypercube Sampling (LHS). Then runs the Fortran simulation executable.
 
 
-- **`lhs_one_param.py`**  
-    Generates Latin Hypercube samples for a single reionization parameter while keeping all other parameters fixed to constants or the midpoint.
+- **`run_simulation_array.py`**  
+    Runs the Fortran simulation code using a txt file as input for the parameters. The txt file is indexed using the environment variable SLURM_ARRAY_TASK_ID.
 
 
 - **`build_dataset.py`**  
@@ -41,6 +49,3 @@
     cl:
         ['cl_ksz', 'dcl', 'dl_ksz', 'ell']
     ```
-
-- **`job.sh`**  
-    A SLURM submission script that requests cluster resources, compiles the simulation code, and executes teh Python script.
