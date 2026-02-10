@@ -5,7 +5,7 @@
 #SBATCH -N 1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=128
-#SBATCH --array=0-4%1
+#SBATCH --array=0-999%16
 #SBATCH -o slurm-%A_%a.out
 #SBATCH -e slurm-%A_%a.err
 #SBATCH -A ast180004p
