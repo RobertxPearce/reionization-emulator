@@ -11,12 +11,12 @@ from scipy.stats import qmc
 # Path for .txt file containing all sampled params
 OUT  = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/param_samples")
 # Name of file (version corresponding to the batch run)
-FILE_NAME = "params_v6.txt"
+FILE_NAME = "params_test.txt"
 
 # Number of samples
-NUM_SAMPLES = 1_000
+NUM_SAMPLES = 5
 # Seed for reproducible results
-SEED = 123
+SEED = 702
 
 # Params and their bounds
 PARAMS = [

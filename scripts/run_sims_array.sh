@@ -3,9 +3,9 @@
 #SBATCH -p RM
 #SBATCH -t 00:15:00
 #SBATCH -N 1
-#SBATCH --ntasks=1            # One task per array element
-#SBATCH --cpus-per-task=1     # One CPU core per task
-#SBATCH --array=0-999%16      # Tasks 0-999, max 16 running at once
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=128
+#SBATCH --array=0-4%1
 #SBATCH -o slurm-%A_%a.out
 #SBATCH -e slurm-%A_%a.err
 #SBATCH -A ast180004p
