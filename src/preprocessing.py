@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 H5_PATH = "../data/processed/proc_sims_v5.h5"
-OUTPUT_PATH = "../data/processed/emulator_dataset_v1.npz"
+OUTPUT_PATH = "../data/processed/poc_three_params.npz"
 
 # Constant to adjust input for emulator
 # 3 (alpha, kb, z_mean) / 4 (alpha, kb, z_mean, b0)

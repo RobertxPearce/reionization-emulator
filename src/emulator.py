@@ -5,8 +5,12 @@
 # ------------------------------------------------------------------------------------------
 
 import torch.nn as nn
+from fontTools.ufoLib.glifLib import layerInfoVersion3ValueData
 
 
+# --------------------------------------------------------------
+# Proof of Concept Emulator Architecture
+# --------------------------------------------------------------
 class ProofOfConceptEmulatorThreeParams(nn.Module):
     def __init__(self):
         """
@@ -39,6 +43,24 @@ class ProofOfConceptEmulatorThreeParams(nn.Module):
         x = self.out(x)
 
         return x
+
+
+# --------------------------------------------------------------
+# Proof of Concept Emulator Architecture
+# --------------------------------------------------------------
+# class ProofOfConceptEmulatorFourParams(nn.Module):
+# # Same architecture
+# # Then use K-Fold Cross Validation
+
+
+# --------------------------------------------------------------
+# Bayesian Neural Network Emulator Architecture
+# --------------------------------------------------------------
+# class BNN(nn.Module):
+#     def __init__(self):
+#         """
+# 
+#         """
 
 #-----------------------------
 #         END OF FILE

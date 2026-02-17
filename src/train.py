@@ -14,9 +14,9 @@ from torch.utils.data import TensorDataset, DataLoader
 from emulator import ProofOfConceptEmulatorThreeParams
 
 
-DATA_PATH = "../data/processed/emulator_dataset_v1.npz"
-MODEL_PATH = "../models/v1/proof_of_concept.pt"
-NORM_PATH = "../models/v1/norm"
+DATA_PATH = "../data/processed/poc_three_params.npz"
+MODEL_PATH = "../models/poc_three_params/poc_three_params_model.pt"
+NORM_PATH = "../models/poc_three_params/poc_three_params_norm"
 
 BATCH_SIZE = 32
 LR = 1e-3
