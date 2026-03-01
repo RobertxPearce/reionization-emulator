@@ -15,8 +15,8 @@ EXEC = Path("/jet/home/rpearce/software/ksz_2lpt/ksz_2lpt.x")
 OUT  = Path("~/ocean/raw/sims_v6").expanduser()
 
 # Path to the txt parameter samples
-# /jet/home/rpearce/software/reionization-emulator/data/param_samples
-PARAM_FILE = Path("/jet/home/rpearce/software/reionization-emulator/data/param_samples/params_v6.txt")
+# /jet/home/rpearce/software/reionization-src/data/param_samples
+PARAM_FILE = Path("/jet/home/rpearce/software/reionization-src/data/param_samples/params_v6.txt")
 
 
 def main() -> int:

@@ -36,5 +36,11 @@ By simulating this process and computing the **angular power spectrum**, we can 
 - `notebooks` - Jupyter notebooks for analysis and visualization.
 - `results` - Plots and charts documenting progress.
 
+## Installing library
+From root run:
+```bash
+python -m pip install -e .
+```
+
 ## Acknowledgments
 This work is part of ongoing research with [Dr. Paul La Plante](https://plaplant.github.io/) in the LEADS Lab at the [University of Nevada, Las Vegas](https://www.unlv.edu/cs), using computing resources with the Pittsburgh Supercomputing Center.

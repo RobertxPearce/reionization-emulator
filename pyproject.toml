@@ -1,0 +1,9 @@
+[project]
+name = "reionization_emulator"
+version = "0.1.0"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
