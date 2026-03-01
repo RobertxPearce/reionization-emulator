@@ -1,20 +1,19 @@
 # ------------------------------------------------------------------------------------------
-# Defines the neural network architecture used to predict the kSZ angular power
-# spectrum from reionization parameters.
+# Defines the 3 parameter POC neural network architecture used to predict the kSZ
+# angular power spectrum from reionization parameters.
 # Robert Pearce
 # ------------------------------------------------------------------------------------------
 
 import torch.nn as nn
-from fontTools.ufoLib.glifLib import layerInfoVersion3ValueData
 
 
 # --------------------------------------------------------------
 # Proof of Concept Emulator Architecture
 # --------------------------------------------------------------
-class ProofOfConceptEmulatorThreeParams(nn.Module):
+class POCEmulatorThreeParams(nn.Module):
     def __init__(self):
         """
-        Small neural network emulator for predicting the log of the angular power spectrum
+        Small neural network src for predicting the log of the angular power spectrum
         from reionization parameters as a proof of concept.
         Architecture:
             Input: 3 parameters (zmean, alpha, kb, b0 is const)
@@ -44,23 +43,6 @@ class ProofOfConceptEmulatorThreeParams(nn.Module):
 
         return x
 
-
-# --------------------------------------------------------------
-# Proof of Concept Emulator Architecture
-# --------------------------------------------------------------
-# class ProofOfConceptEmulatorFourParams(nn.Module):
-# # Same architecture
-# # Then use K-Fold Cross Validation
-
-
-# --------------------------------------------------------------
-# Bayesian Neural Network Emulator Architecture
-# --------------------------------------------------------------
-# class BNN(nn.Module):
-#     def __init__(self):
-#         """
-# 
-#         """
 
 #-----------------------------
 #         END OF FILE
