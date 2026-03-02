@@ -37,7 +37,7 @@ The emulator approximates this forward mapping.
 
 ## Problem Formulation
 
-We learn a mapping: $ \alpha_{\text{zre}}, k_b, z_{\text{mean}}, b_0  \longrightarrow D_\ell $
+We learn a mapping: $z_{mean}$ , $\alpha$ , $k_b$ , $b_0$ $\rightarrow$ $D_\ell $
 
 ### Input Parameters
 
