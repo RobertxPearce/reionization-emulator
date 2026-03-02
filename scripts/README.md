@@ -1,51 +1,43 @@
 # Available Scripts
 
-- **`lhs_one_param.py`**  
-    Generates Latin Hypercube samples for a single reionization parameter while keeping all other parameters fixed to constants or the midpoint.
+Scripts for parameter sampling, running simulations (SLURM/HPC), building the training dataset, and running training.
 
+---
 
-- **`lhs_four_params.py`**  
-    Generates Latin Hypercube samples for the four reionization parameters (zmean, alpha, kb, and b0) and save to a txt file.
+## sampling/
 
+- **[lhs_one_param.py](sampling/lhs_one_param.py)**  
+  Latin Hypercube sampling (LHS) for one reionization parameter while holding the others fixed.
 
-- **`run_simulations.py`**  
-    Generates parameters zmean, alpha, kb and b0 using Latin Hypercube Sampling (LHS). Then runs the Fortran simulation executable.
+- **[lhs_four_params.py](sampling/lhs_four_params.py)**  
+  LHS for four reionization parameters (zmean, alpha, kb, b0). Outputs a parameter file (one sample per row).
 
+---
 
-- **`run_simulation_array.py`**  
-    Runs the Fortran simulation code using a txt file as input for the parameters. The txt file is indexed using the environment variable SLURM_ARRAY_TASK_ID.
+## hpc/
 
+- **[run_simulations.py](hpc/run_simulations.py)**  
+  Cluster runner (single-job batch): generates (zmean, alpha, kb, b0) via LHS and executes the Fortran simulation for each sample. Typically launched from a SLURM submission script.
 
-- **`build_dataset.py`**  
-    Creates a self-contained dataset for angular power spectrum calculation and emulator by organizing raw simulation parameters and outputs into a condensed HDF5 file.
+- **[run_simulation_array.py](hpc/run_simulation_array.py)**  
+  SLURM array runner: reads a parameter file and runs the row indexed by SLURM_ARRAY_TASK_ID.
 
-    ```
-    Top-Level:
-        ['sims']
-    sims:
-        ['sim0'], ['sim1'], ['sim2'], ... , ['sim<n>']
-    sim<n>:
-        [params], [output], [cl]
-    params:
-        ['alpha_zre', 'b0_zre', 'kb_zre', 'zmean_zre']
-    output:
-        ['ksz_map', 'Tcmb0', 'theta_max_ksz', 'pk_tt', 'tau', 'xmval_list', 'zval_list']
-    ```
+### hpc/slurm_scripts/
+- **[run_sims_array.sh](hpc/slurm_scripts/run_sims_array.sh)**  
+  sbatch array script (one parameter set per task).
+- **[run_all_sims.sh](hpc/slurm_scripts/run_all_sims.sh)**  
+  Single-job batch script (runs many simulations in one allocation).
 
-- **`compute_cl.py`**  
-    Calculates the angular power spectrum (C_ell) from each kSZ map using a manual flat-sky FFT method. The resulting spectra (C_ell and D_ell) are stored in the processed HDF5 file under each simulation's /cl group.
+---
 
-    ```
-    Top-Level:
-        ['sims']
-    sims:
-        ['sim0'], ['sim1'], ['sim2'], ... , ['sim<n>']
-    sim<n>:
-        [params], [output], [cl]
-    params:
-        ['alpha_zre', 'b0_zre', 'kb_zre', 'zmean_zre']
-    output:
-        ['ksz_map', 'Tcmb0', 'theta_max_ksz', 'pk_tt', 'tau', 'xmval_list', 'zval_list']
-    cl:
-        ['cl_ksz', 'dcl', 'dl_ksz', 'ell']
-    ```
+## dataset/
+
+- **[build_training_h5.py](dataset/build_training_h5.py)**  
+  Builds a training-ready HDF5 dataset from simulation outputs (inputs = parameters, targets = angular power spectra).
+
+---
+
+## training/
+
+- **[train_poc_four_param_model.py](training/train_poc_four_param_model.py)**  
+  Trains a proof-of-concept model mapping 4 parameters to binned power spectrum outputs.
