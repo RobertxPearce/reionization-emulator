@@ -126,6 +126,10 @@ def fit(model, train_loader, val_loader, optimizer, loss_fn, config: FitConfig) 
     """
     # Set device to configuration spec
     device = torch.device(config.device)
+    
+    # Move model to device
+    model = model.to(device)
+    
     # Initialize dict for train and validation loss history
     history = {"train_loss": [], "val_loss": []}
     
