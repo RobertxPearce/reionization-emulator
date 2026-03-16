@@ -21,8 +21,8 @@
 # ------------------------------------------------------------------------------------------
 
 from dataclasses import dataclass
-from typing import Optional, Tuple
 from pathlib import Path
+from typing import Callable, Optional, Tuple
 
 import numpy as np
 import h5py
@@ -74,10 +74,24 @@ def compute_cl_flat_sky(map_uK: np.ndarray,
     return: centers, cl, dcl
     """
     # --------------------------------------------------------------
-    # Input
+    # Input validation
     # --------------------------------------------------------------
-    
-    # Copy to float64 and save map resolution
+    map_uK = np.asarray(map_uK, dtype=np.float64)
+    if map_uK.ndim != 2:
+        raise ValueError(
+            f"kSZ map must be 2D, got ndim={map_uK.ndim}. "
+            "Expected shape (N, N) for a square map."
+        )
+    if map_uK.shape[0] != map_uK.shape[1]:
+        raise ValueError(
+            f"kSZ map must be square (N, N), got shape {map_uK.shape}. "
+            "Flat-sky power spectrum expects a square map."
+        )
+    if theta_max_rad <= 0:
+        raise ValueError(
+            f"theta_max_rad must be positive, got {theta_max_rad}."
+        )
+
     T = np.array(map_uK, dtype=np.float64, copy=True)
     N = T.shape[0]
 
@@ -299,10 +313,14 @@ def compute_dl(ell: np.ndarray, cl: np.ndarray) -> np.ndarray:
     return ell * (ell + 1.0) * cl / (2.0 * np.pi)
 
 
-def add_cl_to_condensed_h5(h5_path: Path, *, config: ClConfig = ClConfig()) -> int:
+def add_cl_to_condensed_h5(h5_path: Path,
+                           *,
+                           config: ClConfig = ClConfig(),
+                           progress_callback: Optional[Callable[[int, int], None]] = None,
+                           ) -> int:
     """
     Compute and write /cl for every sim in a condensed HDF5 file.
-    
+
     For each sim:
         read:
             /sims/sim<n>/output/ksz_map
@@ -313,61 +331,76 @@ def add_cl_to_condensed_h5(h5_path: Path, *, config: ClConfig = ClConfig()) -> i
             /sims/sim<n>/cl/cl_ksz
             /sims/sim<n>/cl/dcl
             /sims/sim<n>/cl/dl_ksz
-    
+
+    progress_callback: Optional callable(completed, total) for progress bars
+
     return: Number of simulations updated
     """
-    # Count for simulations updated
-    updated = 0
-    # Expand and resolve path
     h5_path = Path(h5_path).expanduser().resolve()
 
-    # Open the processed HDF5 in read/write mode
     with h5py.File(h5_path, "r+") as proc:
-        # Check that top-level group exist
         if config.sims_group not in proc:
-            raise KeyError(f"Missing top-level group {config.sims_group} not found in {h5_path}")
-        
-        # Create reference for group containing all simulations
-        sims_grp = proc[config.sims_group]
+            raise KeyError(
+                f"Missing top-level group '{config.sims_group}' in {h5_path}"
+            )
 
-        # Loop over each simulation present in dataset
-        for sim_name in sorted(sims_grp.keys()):
-            # Create reference for group corresponding to simulation
+        sims_grp = proc[config.sims_group]
+        sim_names = sorted(sims_grp.keys())
+        total = len(sim_names)
+        updated = 0
+
+        for i, sim_name in enumerate(sim_names):
             sim_grp = sims_grp[sim_name]
-            # Create reference for subgroup containing simulation outputs
             out_grp = sim_grp["output"]
 
-            # Load required outputs from condensed dataset
             ksz = np.asarray(out_grp["ksz_map"][()])
             tcmb0 = float(np.asarray(out_grp["Tcmb0"][()]).squeeze())
             theta_max_ksz = float(np.asarray(out_grp["theta_max_ksz"][()]).squeeze())
-            
-            # Replace existing /cl group
+
+            # Validate kSZ map shape before compute
+            if ksz.ndim != 2:
+                raise ValueError(
+                    f"Sim '{sim_name}': ksz_map must be 2D, got ndim={ksz.ndim}. "
+                    "Expected (N, N) for flat-sky power spectrum."
+                )
+            if ksz.shape[0] != ksz.shape[1]:
+                raise ValueError(
+                    f"Sim '{sim_name}': ksz_map must be square, got shape {ksz.shape}."
+                )
+
             cl_group_path = f"/{config.sims_group}/{sim_name}/cl"
             if cl_group_path in proc:
                 if config.overwrite:
                     del proc[cl_group_path]
                 else:
+                    if progress_callback is not None:
+                        progress_callback(i + 1, total)
                     continue
-            
-            # Convert deltaT/T to microK
+
             map_uK = to_microkelvin(ksz, tcmb0)
-            
-            # Compute C_ell
-            ell, cl_ksz, dcl = compute_cl_flat_sky(map_uK, theta_max_ksz, config.nbins, config.ell_cut)
-            
-            # Convert to D_ell
+            ell, cl_ksz, dcl = compute_cl_flat_sky(
+                map_uK, theta_max_ksz, config.nbins, config.ell_cut
+            )
             dl_ksz = compute_dl(ell, cl_ksz)
-            
-            # Store results under /cl
+
+            # Sanity check output shapes
+            if len(ell) != len(cl_ksz) or len(cl_ksz) != len(dl_ksz):
+                raise ValueError(
+                    f"Sim '{sim_name}': inconsistent CL output lengths "
+                    f"ell={len(ell)}, cl_ksz={len(cl_ksz)}, dl_ksz={len(dl_ksz)}"
+                )
+
             grp = proc.create_group(cl_group_path)
             grp.create_dataset("ell", data=ell)
             grp.create_dataset("cl_ksz", data=cl_ksz)
             grp.create_dataset("dcl", data=dcl)
             grp.create_dataset("dl_ksz", data=dl_ksz)
-            
+
             updated += 1
-            
+
+            if progress_callback is not None:
+                progress_callback(i + 1, total)
+
     return updated
 
 #-----------------------------

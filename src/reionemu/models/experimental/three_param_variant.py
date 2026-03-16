@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------------------
-# Defines the 3 parameter POC neural network architecture used to predict the kSZ
-# angular power spectrum from reionization parameters.
+# Experimental 3-parameter POC neural network for the kSZ angular power spectrum.
+# For stable baseline use ThreeParamEmulator from reionemu.models.
 #
 # Robert Pearce
 # ------------------------------------------------------------------------------------------
@@ -15,7 +15,7 @@ class POCEmulatorThreeParams(nn.Module):
         from reionization parameters as a proof of concept.
         Input: Tensor of shape (N, 3) containing (alpha, kb, b0)
         Output: Tensor of shape (N, 5) containing log(D_ell) for 5 ell bins
-        Architecture: 3 -> -> 5 -> 5 (GELU)
+        Architecture: 3 -> 5 -> 5 (GELU)
         """
         super().__init__()
 
@@ -24,13 +24,8 @@ class POCEmulatorThreeParams(nn.Module):
 
         self.activation = nn.GELU()
 
-
     def forward(self, x):
         x = self.activation(self.fc1(x))
         x = self.out(x)
 
         return x
-
-#-----------------------------
-#         END OF FILE
-#-----------------------------

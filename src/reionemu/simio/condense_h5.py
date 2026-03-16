@@ -18,7 +18,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Callable, Dict, Optional, Tuple
 
 import numpy as np
 import h5py
@@ -34,6 +34,25 @@ class CondenseConfig:
     """
     overwrite: bool = True
     require_obs_and_pk: bool = True
+
+
+@dataclass(frozen=True)
+class CondenseStats:
+    """
+    Counts of written and skipped simulations when condensing.
+    """
+    written: int
+    skipped_missing_obs_pk: int
+    skipped_read_error: int
+    skipped_validation_error: int
+
+    @property
+    def skipped_total(self) -> int:
+        return (
+            self.skipped_missing_obs_pk
+            + self.skipped_read_error
+            + self.skipped_validation_error
+        )
     
     
 def find_obs_and_pk_files(sim_dir: Path) -> Tuple[Optional[Path], Optional[Path]]:
@@ -202,89 +221,97 @@ def condense_sim_root(sim_root: Path,
                       *,
                       config: CondenseConfig = CondenseConfig(),
                       sim_prefix: str = "sim",
-                      file_description: str = "Condensed simulation outputs for reionization emulator.",
+                      file_description: str = "Condensed simulation outputs for kSZ 2LPT emulator.",
                       version: int = 1,
-                      ) -> Dict[str, int]:
+                      progress_callback: Optional[Callable[[int, int], None]] = None,
+                      ) -> CondenseStats:
     """
     Condense all sim<n>/ directories under sim_root into one output HDF5 file.
-    
+
     sim_root: Directory containing sim<n>/ subfolders
     out_path: Path to the condensed output .h5 file
     config: CondenseConfig (overwrite, require_obs_and_pk)
     sim_prefix: Subfolder name prefix to include (default "sim")
     file_description: Description of the output file
     version: Version of the output file
-    
-    returns: Dict of number of simulations written and skipped
+    progress_callback: Optional callable(completed, total) called after each sim (e.g. for a progress bar)
+
+    returns: CondenseStats summarizing written and skipped simulations
     """
-    # Expand and resolve to absolute paths
     sim_root = sim_root.expanduser().resolve()
     out_path = out_path.expanduser().resolve()
-    
-    # Check that input directory exists
+
     if not sim_root.exists():
         raise FileNotFoundError(f"{sim_root} does not exist")
-    
-    # Collect all sim directories (sim0, sim1, ... , sim<n>)
+
     sim_dirs = sorted([d for d in sim_root.iterdir() if d.is_dir() and d.name.startswith(sim_prefix)])
-    
+
     if not sim_dirs:
         raise RuntimeError(f"No '{sim_prefix}*' directories found in: '{sim_root}'")
-    
-    # Prevent overwrite if overwrite=false
+
     if out_path.exists() and not config.overwrite:
         raise FileExistsError(f"Output exists and overwrite=False: '{out_path}'")
-    
-    # Counts for written and skipped sims
+
     written = 0
-    skipped = 0
-    
-    # Create output HDF5
+    skipped_missing_obs_pk = 0
+    skipped_read_error = 0
+    skipped_validation_error = 0
+    total = len(sim_dirs)
+
     with h5py.File(out_path, "w") as fout:
-        # Write file metadata
         fout.attrs["source_root"] = str(sim_root)
         fout.attrs["description"] = file_description
         fout.attrs["version"] = int(version)
-        
-        # Top-level group containing all simulations
+
         sims_group = fout.create_group("sims")
-        
-        # Loop over each sim directory
-        for sim_dir in sim_dirs:
+
+        for i, sim_dir in enumerate(sim_dirs):
             sim_name = sim_dir.name
-            
-            # Find which HDF5 files correspond to OBS and PK data
+
             obs_file, pk_file = find_obs_and_pk_files(sim_dir)
-            
-            # Check if both files are required
+
             if config.require_obs_and_pk and (obs_file is None or pk_file is None):
-                skipped += 1
+                skipped_missing_obs_pk += 1
+                if progress_callback is not None:
+                    progress_callback(i + 1, total)
                 continue
-            
-            # Try and read fields skip sim if files are incorrect or keys are missing
+
             try:
                 pk = read_pk_fields(pk_file) if pk_file else {}
                 obs = read_obs_fields(obs_file) if obs_file else {}
             except (OSError, KeyError):
-                skipped += 1
+                skipped_read_error += 1
+                if progress_callback is not None:
+                    progress_callback(i + 1, total)
                 continue
-            
-            # Merge payloads into one dict
+
             payload = {**pk, **obs}
-            
-            # Validate required keys
+
             try:
                 validate_payload(sim_name, payload)
             except ValueError:
-                skipped += 1
+                skipped_validation_error += 1
+                if progress_callback is not None:
+                    progress_callback(i + 1, total)
                 continue
-            
-            # Create /sims/sim<n> group and write
+
             g = sims_group.create_group(sim_name)
             write_sim(g, payload)
             written += 1
 
-    return {"written": written, "skipped": skipped}
+            if progress_callback is not None:
+                progress_callback(i + 1, total)
+
+    skipped = skipped_missing_obs_pk + skipped_read_error + skipped_validation_error
+
+    stats = CondenseStats(
+        written=written,
+        skipped_missing_obs_pk=skipped_missing_obs_pk,
+        skipped_read_error=skipped_read_error,
+        skipped_validation_error=skipped_validation_error,
+    )
+
+    return stats
 
 #-----------------------------
 #         END OF FILE

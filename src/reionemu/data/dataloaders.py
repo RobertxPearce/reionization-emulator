@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------------------
-# DataLoader utilities for emulator training fraction-based splits.
+# DataLoader utilities for reionemu training fraction-based splits.
 #
 # load_training_arrays(): Load X, Y, ell from condensed HDF5 file
 # _validate_split(): Ensure split dictionary is valid
@@ -40,24 +40,63 @@ class DataLoaderConfig:
     
     
 
+def _validate_training_arrays(X: np.ndarray, Y: np.ndarray, ell: np.ndarray) -> None:
+    """
+    Sanity checks on loaded X, Y, ell before constructing dataloaders.
+    Raises ValueError with an informative message if any check fails.
+    """
+    if X.ndim != 2:
+        raise ValueError(
+            f"X must be 2D (n_samples, n_params), got ndim={X.ndim} and shape={X.shape}."
+        )
+    if Y.ndim != 2:
+        raise ValueError(
+            f"Y must be 2D (n_samples, n_bins), got ndim={Y.ndim} and shape={Y.shape}."
+        )
+    if ell.ndim != 1:
+        raise ValueError(
+            f"ell must be 1D (n_bins,), got ndim={ell.ndim} and shape={ell.shape}."
+        )
+    n = X.shape[0]
+    if Y.shape[0] != n:
+        raise ValueError(
+            f"X and Y must have the same number of samples: X.shape[0]={n}, Y.shape[0]={Y.shape[0]}."
+        )
+    n_bins = ell.shape[0]
+    if Y.shape[1] != n_bins:
+        raise ValueError(
+            f"Y number of bins must match ell length: Y.shape[1]={Y.shape[1]}, len(ell)={n_bins}."
+        )
+    if not np.all(np.isfinite(X)):
+        raise ValueError(
+            "X contains non-finite values (NaN or inf). Cannot create dataloaders."
+        )
+    if not np.all(np.isfinite(Y)):
+        raise ValueError(
+            "Y contains non-finite values (NaN or inf). Cannot create dataloaders."
+        )
+    if not np.all(np.isfinite(ell)):
+        raise ValueError(
+            "ell contains non-finite values (NaN or inf). Cannot create dataloaders."
+        )
+
+
 def load_training_arrays(h5_path: Path) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Load X, Y, ell from condensed HDF5 file.
-    
+
     h5_path: Path to condensed HDF5 file.
-    
-    return: X (N, num_params), Y (N, num_params), ell (num_bins,)
+
+    return: X (N, num_params), Y (N, num_bins), ell (num_bins,)
     """
-    # Resolve and expand path
     h5_path = Path(h5_path).expanduser().resolve()
-    
-    # Open file in read mode
+
     with h5py.File(h5_path, "r") as f:
         X = f["training"]["X"][...].astype(np.float32)
         Y = f["training"]["Y"][...].astype(np.float32)
         ell = f["training"]["ell"][...].astype(np.float32)
-    
-    # Return 
+
+    _validate_training_arrays(X, Y, ell)
     return X, Y, ell
 
 
@@ -134,8 +173,8 @@ def make_dataloaders(h5_path: Path,
     """
     # Validate split fractions
     _validate_split(split)
-    
-    # Load raw arrays from HDF5
+
+    # Load raw arrays from HDF5 (includes sanity checks on X, Y, ell)
     X, Y, ell = load_training_arrays(h5_path)
     
     # Generate shuffled index splits

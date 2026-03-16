@@ -1,5 +1,5 @@
 # ------------------------------------------------------------------------------------------
-# K-Fold Cross Validation utilities for emulator training.
+# K-Fold Cross Validation utilities for reionemu training.
 #
 # KFoldConfig: Container for k-fold configuration
 # _validate_k(): Ensure k is valid

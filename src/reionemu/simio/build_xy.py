@@ -10,7 +10,7 @@
 # Writes:
 #   /training/X             : Parameters per simulation
 #   /training/Y             : Binned log(d_ell) per simulation
-#   /training/ell           : Number of ell bins
+#   /training/ell           : Ell bin centers
 #   /training/sim_ids       : Simulation ids
 #   /training/param_names   : Parameter names used in dataset
 #
@@ -29,6 +29,28 @@ from typing import Optional, Sequence, Tuple
 
 import numpy as np
 import h5py
+
+
+@dataclass(frozen=True)
+class BuildStats:
+    """
+    Counts of processed and skipped simulations when building training arrays.
+    """
+    total_sims: int
+    processed: int
+    skipped_missing_params: int
+    skipped_missing_cl: int
+    skipped_inconsistent_ell: int
+    skipped_non_finite: int
+
+    @property
+    def skipped_total(self) -> int:
+        return (
+            self.skipped_missing_params
+            + self.skipped_missing_cl
+            + self.skipped_inconsistent_ell
+            + self.skipped_non_finite
+        )
 
 
 @dataclass(frozen=True)
@@ -80,89 +102,102 @@ def _apply_y_transform(y: np.ndarray, mode: str, eps: float) -> np.ndarray:
 def build_training_arrays(h5_path: Path,
                           *,
                           config: BuildXYConfig = BuildXYConfig(),
-                          ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+                          ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, BuildStats]:
     """
     Construct machine learning arrays from condensed HDF5.
-    
-    return: X parameter matrix, Y target matrix, ell bin centers, sim_ids simulation ids, param_names in X order
+
+    return: X parameter matrix, Y target matrix, ell bin centers, sim_ids, param_names, BuildStats
     """
     # Expand and resolve file path
     h5_path = Path(h5_path).expanduser().resolve()
-    
-    # Initialize training arrays
+
+    # Initialize training arrays and skip counters
     X_rows = []
     Y_rows = []
     sim_ids = []
     ell_ref = None
-    
-    # Open condensed HDF5 file in read mode
+    n_missing_params = 0
+    n_missing_cl = 0
+    n_inconsistent_ell = 0
+    n_non_finite = 0
     with h5py.File(h5_path, "r") as f:
-        # Set top-level path
         sims = f[config.sims_group]
-        
-        # Loop through sims in group
-        for sim_name in sorted(sims.keys()):
-            # Set path for current sim group
+        sim_names = sorted(sims.keys())
+        total_sims = len(sim_names)
+
+        for sim_name in sim_names:
             sim_grp = sims[sim_name]
-            
-            # Ensure required groups exists
+
             if config.params_group not in sim_grp:
+                n_missing_params += 1
                 continue
             if config.cl_group not in sim_grp:
+                n_missing_cl += 1
                 continue
-                
-            # Set path for params and cl
+
             params_grp = sim_grp[config.params_group]
             cl_grp = sim_grp[config.cl_group]
-            
-            # Construct the X row (parameters)
+
             try:
                 x = np.array([_read_scalar(params_grp[p]) for p in config.param_names], dtype=np.float64)
             except KeyError:
-                # Skip sims missing required parameter
+                n_missing_params += 1
                 continue
-            
-            # Construct Y row (power spectrum)
+
             try:
                 ell = np.asarray(cl_grp["ell"][()], dtype=np.float64)
                 y_raw = np.asarray(cl_grp[config.y_source][()], dtype=np.float64)
             except KeyError:
-                # Skip sims missing required parameters
+                n_missing_cl += 1
                 continue
-                
-            # Ensure consistent ell binning across all sims
+
+            if ell.ndim != 1 or y_raw.ndim != 1:
+                n_missing_cl += 1
+                continue
+            if len(ell) != len(y_raw):
+                n_missing_cl += 1
+                continue
+
             if ell_ref is None:
-                ell_ref = ell
+                ell_ref = ell.copy()
             else:
                 if not np.allclose(ell, ell_ref, rtol=1e-12, atol=1e-12):
-                    # Skip if binning is inconsistent
+                    n_inconsistent_ell += 1
                     continue
-            
-            # Apply optional target transformation
+
             y = _apply_y_transform(y_raw, config.y_transform, config.eps)
-            
-            # Check for non-finite values
+
             if not np.all(np.isfinite(x)):
+                n_non_finite += 1
                 continue
             if not np.all(np.isfinite(y)):
+                n_non_finite += 1
                 continue
-            
-            # Append parameters to X row and c_ell to Y and sim id to list
+
             X_rows.append(x)
             Y_rows.append(y)
             sim_ids.append(sim_name)
-            
-    # Final stack into arrays
+
+    stats = BuildStats(
+        total_sims=total_sims,
+        processed=len(X_rows),
+        skipped_missing_params=n_missing_params,
+        skipped_missing_cl=n_missing_cl,
+        skipped_inconsistent_ell=n_inconsistent_ell,
+        skipped_non_finite=n_non_finite,
+    )
+
     if not X_rows:
-        raise RuntimeError(f"No valid simulations found when building training arrays")
-    
+        raise RuntimeError(
+            f"No valid simulations found when building training arrays. Stats: {stats}"
+        )
+
     X = np.vstack(X_rows)
     Y = np.vstack(Y_rows)
-    
     sim_ids_out = np.array(sim_ids, dtype=object)
     param_names_out = np.array(config.param_names, dtype=object)
-    
-    return X, Y, ell_ref, sim_ids_out, param_names_out
+
+    return X, Y, ell_ref, sim_ids_out, param_names_out, stats
 
 
 def write_training_to_h5(h5_path: Path,
@@ -173,31 +208,33 @@ def write_training_to_h5(h5_path: Path,
                          sim_ids: Sequence[str],
                          param_names: Sequence[str],
                          config: BuildXYConfig,
-                         overwrite: bool = True) -> int:
+                         overwrite: bool = True,
+                         stats: Optional[BuildStats] = None) -> int:
     """
     Write training data to condensed HDF5 file.
+
+    stats: If provided, store build statistics as training group attributes.
     """
-    
     h5_path = Path(h5_path).expanduser().resolve()
-    
+
     with h5py.File(h5_path, "r+") as f:
         if "training" in f:
             if overwrite:
                 del f["training"]
             else:
                 raise FileExistsError(f"Training data already exists in {h5_path}")
-            
+
         training_grp = f.create_group("training")
-        
+
         # Store core arrays
         training_grp.create_dataset("X", data=X)
         training_grp.create_dataset("Y", data=Y)
         training_grp.create_dataset("ell", data=ell)
-        
+
         # Store string arrays
         training_grp.create_dataset("sim_ids", data=np.array(sim_ids, dtype=object))
         training_grp.create_dataset("param_names", data=np.array(param_names, dtype=object))
-        
+
         # Store metadata for reproducibility
         training_grp.attrs["y_source"] = config.y_source
         training_grp.attrs["y_transform"] = config.y_transform
@@ -205,6 +242,14 @@ def write_training_to_h5(h5_path: Path,
         training_grp.attrs["number_of_samples"] = X.shape[0]
         training_grp.attrs["number_of_parameters"] = X.shape[1]
         training_grp.attrs["ell_bin_count"] = Y.shape[1]
+
+        if stats is not None:
+            training_grp.attrs["build_total_sims"] = stats.total_sims
+            training_grp.attrs["build_processed"] = stats.processed
+            training_grp.attrs["build_skipped_missing_params"] = stats.skipped_missing_params
+            training_grp.attrs["build_skipped_missing_cl"] = stats.skipped_missing_cl
+            training_grp.attrs["build_skipped_inconsistent_ell"] = stats.skipped_inconsistent_ell
+            training_grp.attrs["build_skipped_non_finite"] = stats.skipped_non_finite
 
     return X.shape[0]
 
@@ -216,18 +261,27 @@ def build_and_write_training(h5_path: Path,
     """
     Build and write training data to HDF5 file.
         1) Read simulations from sims
-        2) Build X, Y, ell arrays
+        2) Build X, Y, ell arrays (with skip stats)
         3) Write them into condensed HDF5 /training
-        
+
     return: Number of simulations included in training set
     """
-    # Build the training arrays
-    X, Y, ell_ref, sim_ids, param_names = build_training_arrays(h5_path, config=config)
-    
-    # Write training arrays to HDF5
-    count = write_training_to_h5(h5_path, X=X, Y=Y, ell=ell_ref, sim_ids=sim_ids, param_names=param_names, config=config, overwrite=overwrite)
-    
-    # Return number of simulations
+    X, Y, ell_ref, sim_ids, param_names, stats = build_training_arrays(
+        h5_path, config=config
+    )
+
+    count = write_training_to_h5(
+        h5_path,
+        X=X,
+        Y=Y,
+        ell=ell_ref,
+        sim_ids=sim_ids,
+        param_names=param_names,
+        config=config,
+        overwrite=overwrite,
+        stats=stats,
+    )
+
     return count
 
 #-----------------------------
