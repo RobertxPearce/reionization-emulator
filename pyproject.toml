@@ -1,9 +1,56 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
 [project]
-name = "reionization_emulator"
+name = "reionemu"
 version = "0.1.0"
+description = "Machine-learning emulator pipeline for the kinetic Sunyaev-Zel'dovich angular power spectrum."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+authors = [
+  { name = "Robert Pearce", email = "robertbdpearce@gmail.com" },
+  { name = "Dr. Paul La Plante" }
+]
+keywords = ["cosmology", "reionization", "kSZ", "machine learning", "astrophysics"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Astronomy",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "numpy",
+  "h5py",
+  "torch",
+]
 
-[tool.setuptools]
-package-dir = {"" = "src"}
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+dev = [
+  "pytest>=7.0",
+  "scipy",
+  "matplotlib",
+  "build",
+  "twine",
+  "ipykernel",
+  "jupyter",
+  "ruff",
+]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[project.urls]
+Homepage = "https://github.com/RobertxPearce/reionization-emulator"
+Repository = "https://github.com/RobertxPearce/reionization-emulator"
+Issues = "https://github.com/RobertxPearce/reionization-emulator/issues"
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
