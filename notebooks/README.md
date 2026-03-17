@@ -1,4 +1,6 @@
-# Available Notebooks
+# Notebooks
+
+Analysis and training examples. The **primary package example** (full pipeline and API usage) is in the repo root: [../docs/reionemu_package_example.ipynb](../docs/reionemu_package_example.ipynb).
 
 ---
 

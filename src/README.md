@@ -1,16 +1,56 @@
-# Emulator Library
+# Emulator Library (`reionemu`)
 
 Core Python package for the reionization emulator: condensing simulation outputs, computing kSZ power spectra, building ML-ready training arrays, and training networks.
+
+---
+
+## Public API
+
+Install with `pip install reionemu` (or `pip install -e .` from the repo root), then import from the top level:
+
+```python
+import reionemu
+
+# Simulation I/O and training-array building
+reionemu.condense_sim_root(...)
+reionemu.CondenseConfig
+reionemu.add_cl_to_condensed_h5(...)
+reionemu.ClConfig
+reionemu.build_and_write_training(...)
+reionemu.build_training_arrays(...)
+reionemu.BuildXYConfig
+reionemu.BuildStats
+reionemu.CondenseStats
+
+# Data loaders and normalization
+reionemu.make_dataloaders(...)
+reionemu.load_training_arrays(...)
+reionemu.DataLoaderConfig
+reionemu.Normalizer
+
+# Models (baseline)
+reionemu.FourParamEmulator
+reionemu.ThreeParamEmulator
+
+# Training
+reionemu.fit(...)
+reionemu.FitConfig
+reionemu.kfold_cross_validate(...)
+reionemu.KFoldConfig
+```
+
+Experimental POC architectures live in `reionemu.models.experimental`.
 
 ---
 
 ## Modules
 
 ### simio/
-Simulation I/O and preprocessing utilities.
 
-- **[condense_h5.py](simio/condense_h5.py)**  
-  Builds a single condensed HDF5 from per-simulation directories by extracting arrays/scalars, and validating required fields. Condensed structure is as follows:  
+Simulation I/O and preprocessing.
+
+- **condense_h5.py** — Build a single condensed HDF5 from per-simulation directories. Uses `CondenseConfig`; returns a dict with `written`, `skipped`, and skip breakdown. Optional `progress_callback(completed, total)`. Condensed structure is as follows:  
+
     ```
     Top-Level:
         ['sims']
@@ -24,8 +64,8 @@ Simulation I/O and preprocessing utilities.
         ['ksz_map', 'Tcmb0', 'theta_max_ksz', 'pk_tt', 'tau', 'xmval_list', 'zval_list']
     ```
 
-- **[compute_cl.py](simio/compute_cl.py)**  
-  Computes the flat-sky angular power spectrum from each sim’s `ksz_map` (converted to $\mu$K using `Tcmb0`), applies a Hann window + normalization, removes map mean/NaNs, FFTs to 2D power, bins to full-res then rebins to `nbins` after dropping low-$\ell$ bins below `ell_cut`, and writes into the condensed HDF5. Condensed structure is as follows:  
+- **compute_cl.py** — Compute flat-sky angular power spectrum from each sim’s kSZ map, write `/cl` (ell, cl_ksz, dcl, dl_ksz) into the condensed HDF5. Uses `ClConfig`. Optional `progress_callback`. Condensed structure is as follows:  
+
     ```
     Top-Level:
         ['sims']
@@ -41,11 +81,8 @@ Simulation I/O and preprocessing utilities.
         ['cl_ksz', 'dcl', 'dl_ksz', 'ell']
     ```
 
-- **[build_xy.py](simio/build_xy.py)**  
-  Builds ML-ready arrays from the condensed HDF5 and writes them back into the condensed HDF5 file:
-  - `X`: Ordered parameter matrix (default `("zmean_zre","alpha_zre","kb_zre","b0_zre")`)
-  - `Y`: Target spectrum (default `dl_ksz`) with optional transform (`none`, `log10`, `ln`) and `eps` added for stability
-  - Enforces consistent `ell` binning across sims and writes reproducibility metadata.
+- **build_xy.py** — Build ML arrays (X, Y, ell) from condensed HDF5 and write `/training`. Uses `BuildXYConfig`. Returns `BuildStats` (processed/skipped counts). Skip reasons: missing params, missing cl, inconsistent ell, non-finite values. Condensed structure is as follows:  
+
     ```
     Top-Level:
         ['sims', 'training']
@@ -63,54 +100,32 @@ Simulation I/O and preprocessing utilities.
         ['X', 'Y', 'ell', 'param_names', 'sim_ids']
     ```
 
----
-
 ### data/
-Training data helpers.
 
-- **[normalization.py](data/normalization.py)**  
-  Simple feature-wise standardization utilities:
+- **normalization.py** — `Normalizer`, `fit_standardizer`, `transform_standardizer`, `inverse_transform_standardizer`.
   - `Normalizer(mean, std)` Container
   - `fit_standardizer()` Computes mean/std over `axis=0` and guards `std==0`
   - `transform_standardizer()` and `inverse_transform_standardizer()` apply/undo scaling
-
----
+- **dataloaders.py** — `load_training_arrays(h5_path)`, `make_dataloaders(h5_path, split=..., config=DataLoaderConfig())`. Validates X, Y, ell (shapes and finite values) before building loaders.
 
 ### models/
-Baseline PyTorch model definitions.
 
-- **[poc_three_params.py](models/poc_three_params.py)**  
-  POC MLP: 3 $\rightarrow$ 5 $\rightarrow$ 5 with GELU, predicting 5 spectrum bins
-
-- **[poc_four_params.py](models/poc_four_params.py)**  
-  POC MLP: 4 $\rightarrow$ 5 $\rightarrow$ 5 with GELU, predicting 5 spectrum bins
-
----
+- **four_param_emulator.py** — `FourParamEmulator`: 4 → 20 → 20 → 5 (ReLU), 5 spectrum bins.
+- **three_param_emulator.py** — `ThreeParamEmulator`: 3 → 5 → 5 (GELU), 5 spectrum bins.
+- **experimental/** — POC variants: `POCEmulatorFourParamsV1/V2/V3`, `POCEmulatorThreeParams`. Import from `reionemu.models.experimental`.
 
 ### training/
-Reusable training loop.
 
-- **[train_loop.py](training/train_loop.py)**  
-  Minimal PyTorch training utilities:
+- **train_loop.py** — `FitConfig`, `train_one_epoch`, `evaluate`, `fit(model, train_loader, val_loader, optimizer, loss_fn, config)`.
   - `FitConfig` (epochs, device, optional early stopping patience, optional gradient clipping)
-  - `train_one_epoch()`, `evaluate()`
   - `fit()` trains for many epochs, prints losses each epoch, supports early stopping and restores best weights when used
+- **kfold_cv.py** — `KFoldConfig`, `kfold_cross_validate(h5_path, model_builder=..., ...)`.
 
 ---
 
-## Typical Flow
+## Typical flow
 
-1. **Condense raw sim outputs $\rightarrow$ one HDF5**  
-   `simio/condense_h5.py`
-
-2. **Compute spectra and write `/cl` into the condensed HDF5**  
-   `simio/compute_cl.py`
-
-3. **Build training arrays and write `/training` into the same HDF5**  
-   `simio/build_xy.py`
-
-4. **Standardize inputs/targets + create loaders**  
-   `data/normalization.py`
-
-5. **Train model**  
-   `models/` + `training/train_loop.py`
+1. Condense raw sim outputs → one HDF5: `condense_sim_root(...)`
+2. Compute spectra and write `/cl`: `add_cl_to_condensed_h5(...)`
+3. Build and write `/training`: `build_and_write_training(...)`
+4. Create loaders and train: `make_dataloaders(...)`, then `fit(...)` or `kfold_cross_validate(...)`

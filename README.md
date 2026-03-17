@@ -1,150 +1,129 @@
-# kSZ 2LPT Reionization Emulator
+<p align="center">
+  <img src="https://raw.githubusercontent.com/RobertxPearce/reionization-emulator/main/docs/assets/reionemu-logo.png" alt="reionemu logo" width="300">
+</p>
 
-Machine learning emulator for the kinetic Sunyaev–Zel’dovich (kSZ) angular power spectrum during the Epoch of Reionization (EoR).
+# reionemu
 
-This project combines:
-
-- Large-scale cosmological simulations (Zreion model)
-- High-performance computing (Bridges-2, PSC)
-- Deterministic power spectrum computation
-- A modular Python emulator library
-- Neural network surrogate modeling
+A modular Python package for building machine-learning emulators of the kinetic Sunyaev-Zel'dovich (kSZ) angular power spectrum from kSZ 2LPT reionization simulations. It includes tools to condense simulation outputs, compute flat-sky power spectra, assemble training datasets, and train neural networks that predict binned rescaled kSZ power spectra from reionization parameters.
 
 The goal is to learn a fast surrogate model that maps reionization parameters $\rightarrow$ binned kSZ power spectrum, enabling rapid exploration of cosmological parameter space without re-running expensive simulations.
-
-This work is conducted under [Dr. Paul La Plante](https://plaplant.github.io/) in the LEADS Lab at UNLV.
-
----
-
-## Scientific Context
-
-The kinetic Sunyaev–Zel’dovich (kSZ) effect is produced when CMB photons undergo Thomson scattering from free electrons with bulk velocities, leading to Doppler-induced temperature fluctuations.
-
-From each simulation, we compute the angular power spectrum:
-
-
-$D_\ell = \frac{\ell(\ell+1)}{2\pi} C_\ell $ 
-
-These spectra contain statistical information about:
-
-- The timing of reionization
-- Its duration
-- The clustering of ionized regions
-
-The emulator approximates this forward mapping.
-
----
-
-## Problem Formulation
-
-We learn a mapping: $z_{mean}$ , $\alpha$ , $k_b$ , $b_0$ $\rightarrow$ $D_\ell $
-
-### Input Parameters
-
-| Parameter | Description | Bounds |
-|------------|------------|--------|
-| `alpha_zre` | Controls reionization duration | [0.10, 0.90] |
-| `kb_zre` | Controls clustering of ionized regions | [0.10, 2.0] |
-| `z_mean` | Midpoint redshift of reionization | [7.0, 9.0] |
-| `b0_zre` | Overall ionization amplitude | [0.10, 0.80] |
-
----
-
-# Emulator Library Architecture
-
-The `src/` directory contains a purpose-built, modular Python library designed to make the full pipeline reproducible and extensible.
-
-The library cleanly separates:
-
-### 1. Simulation I/O (`simio/`)
-- Condenses raw Zreion outputs into a structured HDF5 layout
-- Computes flat-sky angular power spectra from kSZ maps
-- Builds ML-ready training arrays `(X, Y)` with optional log transforms
-
-### 2. Data Utilities (`data/`)
-- Deterministic feature standardization
-- Dataset wrappers and PyTorch DataLoaders
-- Explicit parameter ordering and metadata tracking
-
-### 3. Models (`models/`)
-- Minimal MLP baselines (3- and 4-parameter variants)
-- Designed for easy extension to deeper architectures or Bayesian models
-
-### 4. Training (`training/`)
-- Reusable PyTorch training loop
-- Early stopping support
-- Device-aware execution (MPS/CPU/GPU)
-- Configurable gradient clipping
-
-### Design Goals
-
-- Reproducible HDF5 pipeline
-- Explicit parameter ordering
-- Deterministic preprocessing
-- Minimal coupling between simulation and ML code
-- Research-friendly extensibility (e.g., BNNs)
-
-The emulator library allows experiments to be run from scripts or notebooks without rewriting preprocessing or training logic.
-
----
-
-## Workflow
-
-### 1. Parameter Sampling
-Latin Hypercube Sampling across the 4D parameter space.
-
-### 2. Simulation (HPC)
-Zreion simulations are executed on Bridges-2 using SLURM job arrays.
-
-### 3. Dataset Construction
-- Condense raw HDF5 outputs
-- Compute flat-sky angular power spectra
-- Bin spectra into fixed ℓ bins
-- Build training arrays (X, Y)
-
-### 4. Emulator Training
-- Standardize inputs/targets
-- Train baseline neural networks
-- Evaluate MSE on validation splits
-
----
-
-## Repository Structure
-
-```bash
-└── reionization-emulator/
-    ├── src/
-    │   └── emulator/       Core emulator library
-    │       ├── simio/      Simulation I/O + power spectrum computation
-    │       ├── data/       Standardization + dataloaders
-    │       ├── models/     PyTorch model architectures
-    │       └── training/   Reusable training loop and K-Fold Clustering
-    ├── notebooks/          Analysis and validation notebooks
-    ├── data/               Raw and processed simulation data (not tracked)
-    ├── scripts/            HPC runners, dataset builders, sampling utilities
-    ├── results/            Figures and experiment outputs
-    └── checkpoints/        Saved model weights + normilization artifacts
-```
 
 ---
 
 ## Installation
 
-Install the emulator package in editable mode:
+```bash
+pip install reionemu
+```
+
+Or from source (editable):
 
 ```bash
-python -m pip install -e .
+git clone https://github.com/RobertxPearce/reionization-emulator.git
+cd reionization-emulator
+pip install -e .
+```
+
+**Requirements:** Python 3.10+, NumPy, HDF5, PyTorch.
+
+To run the test suite:
+
+```bash
+pip install -e ".[test]"   # or: pip install . pytest
+pytest tests/ -v
 ```
 
 ---
 
-## Long-Term Goals
-- Replace expensive simulations with a fast surrogate 
-- Enable likelihood-based cosmological parameter inference 
-- Incorporate uncertainty quantification (e.g., Bayesian neural networks)
-- Scale beyond proof-of-concept MLP architectures
+## Quick start
+
+After installing, you can load a processed HDF5 training dataset, create dataloaders, and train the baseline 4-parameter emulator:
+
+```python
+from pathlib import Path
+import torch
+import reionemu
+
+# Path to a condensed HDF5 that already has /training (X, Y, ell)
+h5_path = Path("path/to/condensed.h5")
+
+# Dataloaders with train/val split and optional normalization
+loaders, normalizers, ell = reionemu.make_dataloaders(
+    h5_path,
+    split={"train": 0.8, "val": 0.2},
+    config=reionemu.DataLoaderConfig(batch_size=32, seed=42),
+)
+
+# Baseline 4-parameter model, optimizer, loss
+model = reionemu.FourParamEmulator()
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+loss_fn = torch.nn.MSELoss()
+
+# Train for a few epochs
+history = reionemu.fit(
+    model,
+    loaders["train"],
+    loaders["val"],
+    optimizer,
+    loss_fn,
+    config=reionemu.FitConfig(epochs=10, device="cpu"),
+)
+
+# Validation loss per epoch
+print(history["val_loss"])
+```
+
+For a full pipeline example (condense → compute power spectra → build training data → train) and scientific context, see the **[reionemu package example notebook](docs/reionemu_package_example.ipynb)**.
+
+---
+
+## Scientific context
+
+The kinetic Sunyaev-Zel'dovich (kSZ) effect arises from the scattering of CMB photons by free electrons with bulk motion, generating secondary temperature anisotropies. The kSZ angular power spectrum carries information about the timing, duration, and structure of reionization. This emulator provides a fast surrogate that maps reionization parameters (zmean_zre, alpha_zre, kb_zre, b0_zre) to binned, rescaled kSZ power spectra, making parameter-space exploration much faster than rerunning the full simulations.
+
+---
+
+## Repository structure
+
+| Path | Description |
+|------|-------------|
+| **`src/reionemu/`** | Core library (pip-installable package) |
+| `src/reionemu/simio/` | Simulation I/O, power spectrum computation, training-array building |
+| `src/reionemu/data/` | Dataloaders, normalization |
+| `src/reionemu/models/` | Baseline and experimental emulator architectures |
+| `src/reionemu/training/` | Training loop, K-fold cross-validation |
+| **`scripts/`** | Dataset builder, HPC runners, sampling (environment-specific) |
+| **`notebooks/`** | Analysis and training examples |
+| **`docs/`** | Package example notebook |
+| `data/` | Raw and processed data (not tracked) |
+| `checkpoints/` | Saved models and normalization artifacts |
+
+The **core API** is in `src/reionemu/`. Scripts under `scripts/hpc/` and `scripts/sampling/` are for cluster and sampling workflows and may use machine-specific paths; the library itself is portable.
+
+---
+
+## Main public API
+
+Import from the top-level package after `pip install reionemu`:
+
+- **Simulation I/O:** `condense_sim_root`, `CondenseConfig`, `add_cl_to_condensed_h5`, `ClConfig`, `build_and_write_training`, `build_training_arrays`, `BuildXYConfig`, `BuildStats`, `CondenseStats`
+- **Data:** `make_dataloaders`, `load_training_arrays`, `DataLoaderConfig`, `Normalizer`
+- **Models:** `FourParamEmulator`, `ThreeParamEmulator` (experimental variants in `reionemu.models.experimental`)
+- **Training:** `fit`, `FitConfig`, `kfold_cross_validate`, `KFoldConfig`
+
+See [src/README.md](src/README.md) for module-level documentation.
+
+---
+
+## Typical workflow
+
+1. **Parameter sampling** — Latin Hypercube Sampling over the 4D reionization parameter space.
+2. **Simulation (HPC)** — Run Zreion (or compatible) simulations; outputs per sim in HDF5.
+3. **Dataset construction** — Use `condense_sim_root` → `add_cl_to_condensed_h5` → `build_and_write_training` to produce a single condensed HDF5 with `/sims` and `/training`.
+4. **Training** — Use `make_dataloaders` and `fit` (or `kfold_cross_validate`) to train the emulator.
 
 ---
 
 ## Acknowledgments
-This research is conducted in the LEADS Lab at the University of Nevada, Las Vegas, under [Dr. Paul La Plante](https://plaplant.github.io/), using computing resources from the Pittsburgh Supercomputing Center (Bridges-2).
+
+This research is conducted in the LEADS Lab at the University of Nevada, Las Vegas, under [Dr. Paul La Plante](https://plaplant.github.io/), with computing resources from the Pittsburgh Supercomputing Center (Bridges-2).

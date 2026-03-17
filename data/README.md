@@ -12,5 +12,5 @@ This folder organizes all simulation outputs, intermediate products, and final d
     Format: HDF5 files
 
 
-- **processed/** – Processed HDF5 datasets containing model parameters, kSZ maps, angular power spectra (C_ell and D_ell) for each simulation, organized under /sims. Training data is saved under /training and contains X, Y, ell, sim ids, param names, and meta data for emulator training.  
+- **processed/** – Processed HDF5 datasets containing model parameters, kSZ maps, angular power spectra (C_ell and D_ell) for each simulation, organized under /sims. Training data is saved under /training and contains X, Y, ell, sim ids, param names, and metadata for emulator training.  
     Format: HDF5 files

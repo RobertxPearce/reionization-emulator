@@ -1,6 +1,8 @@
-# Available Scripts
+# Scripts
 
-Scripts for parameter sampling, running simulations (SLURM/HPC), building the training dataset, and running training.
+Scripts for parameter sampling, HPC simulation runs, and building the training dataset. These are **environment-specific**: paths and cluster settings (e.g. SLURM, Fortran binary location) may need to be adapted for your system.
+
+The **core library** is in `src/reionemu/` and is pip-installable; these scripts show how to use it in practice.
 
 ---
 
@@ -34,10 +36,3 @@ Scripts for parameter sampling, running simulations (SLURM/HPC), building the tr
 
 - **[build_training_h5.py](dataset/build_training_h5.py)**  
   Builds a training-ready HDF5 dataset from simulation outputs (inputs = parameters, targets = angular power spectra).
-
----
-
-## training/
-
-- **[train_poc_four_param_model.py](training/train_poc_four_param_model.py)**  
-  Trains a proof-of-concept model mapping 4 parameters to binned power spectrum outputs.
