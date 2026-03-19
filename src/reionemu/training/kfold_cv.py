@@ -98,6 +98,10 @@ def kfold_cross_validate(
             "fold_best_val": list of best validation loss per fold
             "mean_best_val": mean of best val losses
             "std_best_val": std of best val losses
+            "models": list of trained model instances, one per fold
+            "norms": list of dicts per fold, each with keys "X" and "Y" containing
+                     the fitted standardizer for that fold (None if normalization disabled)
+            "val_indices": list of np.ndarray of validation indices per fold
             "histories": (optional) list of history dicts for each fold
     """
     # Load raw arrays from HDF5
@@ -112,6 +116,11 @@ def kfold_cross_validate(
     # Optionally store full histories
     histories: List[Dict[str, list]] = []
 
+    # Fold models, norms and val indicies for error %
+    fold_models: List[torch.nn.Module] = []
+    fold_norms: List[Dict] = []
+    fold_val_indices: List[np.ndarray] = []
+
     # Loop over folds
     for fold_id in range(kfold_config.k):
         # Validation indices for this fold
@@ -119,6 +128,9 @@ def kfold_cross_validate(
 
         # Training indices are all indices not in val_idx
         train_idx = np.concatenate([folds[i] for i in range(kfold_config.k) if i != fold_id])
+
+        x_norm = None
+        y_norm = None
 
         # Fit normalization on train only
         if dl_config.normalize_X:
@@ -165,6 +177,18 @@ def kfold_cross_validate(
             config=fit_config,
         )
 
+        # Save trained model
+        fold_models.append(model)
+
+        # Save norms for this fold
+        fold_norms.append({
+            "X": x_norm if dl_config.normalize_X else None,
+            "Y": y_norm if dl_config.normalize_Y else None,
+        })
+
+        # Save val indices
+        fold_val_indices.append(val_idx)
+
         # Save best validation loss achieved in this fold
         best_val = float(np.min(np.asarray(history["val_loss"], dtype=np.float64)))
         fold_best_val.append(best_val)
@@ -182,6 +206,9 @@ def kfold_cross_validate(
         "fold_best_val": fold_best_val,
         "mean_best_val": float(vals.mean()),
         "std_best_val": float(vals.std(ddof=1)) if len(vals) > 1 else 0.0,
+        "models": fold_models,
+        "norms": fold_norms,
+        "val_indices": fold_val_indices
     }
 
     # Attach histories if requested
