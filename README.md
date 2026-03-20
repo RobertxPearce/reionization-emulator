@@ -6,7 +6,7 @@
 
 A modular Python package for building machine-learning emulators of the kinetic Sunyaev-Zel'dovich (kSZ) angular power spectrum from kSZ 2LPT reionization simulations. It includes tools to condense simulation outputs, compute flat-sky power spectra, assemble training datasets, and train neural networks that predict binned rescaled kSZ power spectra from reionization parameters.
 
-The goal is to learn a fast surrogate model that maps reionization parameters $\rightarrow$ binned kSZ power spectrum, enabling rapid exploration of cosmological parameter space without re-running expensive simulations.
+The goal is to learn a fast surrogate model that maps reionization parameters → binned kSZ power spectrum, enabling rapid exploration of cosmological parameter space without re-running expensive simulations.
 
 ---
 
@@ -21,7 +21,7 @@ Or from source (editable):
 ```bash
 git clone https://github.com/RobertxPearce/reionization-emulator.git
 cd reionization-emulator
-pip install -e .
+python -m pip install -e .
 ```
 
 **Requirements:** Python 3.10+, NumPy, HDF5, PyTorch.
@@ -117,10 +117,10 @@ See [src/README.md](src/README.md) for module-level documentation.
 
 ## Typical workflow
 
-1. **Parameter sampling** — Latin Hypercube Sampling over the 4D reionization parameter space.
-2. **Simulation (HPC)** — Run Zreion (or compatible) simulations; outputs per sim in HDF5.
-3. **Dataset construction** — Use `condense_sim_root` → `add_cl_to_condensed_h5` → `build_and_write_training` to produce a single condensed HDF5 with `/sims` and `/training`.
-4. **Training** — Use `make_dataloaders` and `fit` (or `kfold_cross_validate`) to train the emulator.
+1. **Parameter sampling** - Latin Hypercube Sampling over the 4D reionization parameter space.
+2. **Simulation (HPC)** - Run Zreion (or compatible) simulations; outputs per sim in HDF5.
+3. **Dataset construction** - Use `condense_sim_root` → `add_cl_to_condensed_h5` → `build_and_write_training` to produce a single condensed HDF5 with `/sims` and `/training`.
+4. **Training** - Use `make_dataloaders` and `fit` (or `kfold_cross_validate`) to train the emulator.
 
 ---
 
