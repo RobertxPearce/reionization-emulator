@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.10", "3.11"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - name: Check out repository
@@ -30,9 +30,9 @@ jobs:
         run: |
           python -m pip install -e .
 
-      - name: Install packaging tools
+      - name: Install CI tools
         run: |
-          python -m pip install build twine
+          python -m pip install build twine ruff
 
       - name: Build package
         run: |
@@ -41,3 +41,8 @@ jobs:
       - name: Check package metadata
         run: |
           twine check dist/*
+      
+      - name: Run Ruff
+        run: |
+          ruff format --check src/reionemu
+          ruff check src/reionemu
