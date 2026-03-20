@@ -1,9 +1,9 @@
-# ------------------------------------------------------------------------------------------
-# Defines the 3 parameter POC neural network architecture used to predict the kSZ
-# angular power spectrum from reionization parameters.
+# -----------------------------------------------------------------------------
+# Defines the 3 parameter POC neural network architecture used to predict the
+# kSZ angular power spectrum from reionization parameters.
 #
 # Robert Pearce
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import torch.nn as nn
 
@@ -24,13 +24,13 @@ class ThreeParamEmulator(nn.Module):
 
         self.activation = nn.GELU()
 
-
     def forward(self, x):
         x = self.activation(self.fc1(x))
         x = self.out(x)
 
         return x
 
-#-----------------------------
+
+# -----------------------------
 #         END OF FILE
-#-----------------------------
+# -----------------------------

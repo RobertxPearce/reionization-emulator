@@ -1,9 +1,9 @@
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Training loops and cross-validation utilities.
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
-from .train_loop import fit, FitConfig
-from .kfold_cv import kfold_cross_validate, KFoldConfig
+from .kfold_cv import KFoldConfig, kfold_cross_validate
+from .train_loop import FitConfig, fit
 
 __all__ = [
     "fit",

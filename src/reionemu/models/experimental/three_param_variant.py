@@ -1,9 +1,11 @@
-# ------------------------------------------------------------------------------------------
-# Experimental 3-parameter POC neural network for the kSZ angular power spectrum.
+# -----------------------------------------------------------------------------
+# Experimental 3-parameter POC neural network for the kSZ angular power
+# spectrum.
+#
 # For stable baseline use ThreeParamEmulator from reionemu.models.
 #
 # Robert Pearce
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import torch.nn as nn
 

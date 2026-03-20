@@ -1,13 +1,14 @@
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # DataLoader utilities for reionemu training fraction-based splits.
 #
 # load_training_arrays(): Load X, Y, ell from condensed HDF5 file
 # _validate_split(): Ensure split dictionary is valid
-# _make_fraction_splits(): Create shuffled index arrays based on fraction specification
+# _make_fraction_splits(): Create shuffled index arrays based on fraction
+# specification
 # make_dataloaders(): Create PyTorch DataLoaders using fraction-based splits
 #
 # Robert Pearce
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from dataclasses import dataclass
 from pathlib import Path

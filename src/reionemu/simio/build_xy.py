@@ -1,6 +1,6 @@
-# ------------------------------------------------------------------------------------------
-# Utilities to build machine learning ready arrays (X, Y, ell) from the condensed
-# simulation HDF5 file.
+# -----------------------------------------------------------------------------
+# Utilities to build machine learning ready arrays (X, Y, ell) from the
+# condensed simulation HDF5 file.
 #
 # Reads:
 #   /sims/sim<n>/params/{alpha_zre, b0_zre, kb_zre, zmean_zre}
@@ -16,19 +16,20 @@
 #
 # _read_scalar(): Read scalars from HDF5
 # _apply_y_transform(): Apply optional transformation to target Y
-# build_training_arrays(): Construct machine learning arrays from condensed HDF5
+# build_training_arrays(): Construct machine learning arrays from condensed
+# HDF5
 # write_training_to_h5(): Write training data to condensed HDF5 file
 # build_and_write_training(): Build and write training data to HDF5 file
 #
 # Robert Pearce
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Sequence, Tuple
 
-import numpy as np
 import h5py
+import numpy as np
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,7 @@ class BuildStats:
     """
     Counts of processed and skipped simulations when building training arrays.
     """
+
     total_sims: int
     processed: int
     skipped_missing_params: int
@@ -57,7 +59,7 @@ class BuildStats:
 class BuildXYConfig:
     """
     Configuration for building the training dataset.
-    
+
     sims_group: Name of top-level group containing simulations
     params_group: Subgroup under each simulation containing parameter scalars
     cl_group: Subgroup under each simulation containing power spectra data
@@ -66,19 +68,20 @@ class BuildXYConfig:
     y_transform: Optional transformation applied to the power spectrum
     eps: Small value added before logarithm to avoid log(0)
     """
+
     sims_group: str = "sims"
     params_group: str = "params"
     cl_group: str = "cl"
     param_names: Tuple[str, ...] = ("zmean_zre", "alpha_zre", "kb_zre", "b0_zre")
-    y_source: str = "dl_ksz"    # "dl_ksz" or "cl_ksz"
-    y_transform: str = "ln"   # "none", "log10", "ln"
+    y_source: str = "dl_ksz"  # "dl_ksz" or "cl_ksz"
+    y_transform: str = "ln"  # "none", "log10", "ln"
     eps: float = 1e-30
 
 
 def _read_scalar(ds) -> float:
     """
     Read scalar from HDF5 file.
-    
+
     return: Scalar read from HDF5 file
     """
     return float(np.asarray(ds[()]).squeeze())
@@ -87,7 +90,7 @@ def _read_scalar(ds) -> float:
 def _apply_y_transform(y: np.ndarray, mode: str, eps: float) -> np.ndarray:
     """
     Apply optional transformation to target Y.
-    
+
     returns: Y with no transformation, log10 or ln
     """
     if mode == "none":
@@ -99,14 +102,20 @@ def _apply_y_transform(y: np.ndarray, mode: str, eps: float) -> np.ndarray:
     raise ValueError(f"Unknown y_transform='{mode}'")
 
 
-def build_training_arrays(h5_path: Path,
-                          *,
-                          config: BuildXYConfig = BuildXYConfig(),
-                          ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, BuildStats]:
+def build_training_arrays(
+    h5_path: Path,
+    *,
+    config: BuildXYConfig = BuildXYConfig(),
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, BuildStats]:
     """
     Construct machine learning arrays from condensed HDF5.
 
-    return: X parameter matrix, Y target matrix, ell bin centers, sim_ids, param_names, BuildStats
+    return: X parameter matrix
+            Y target matrix
+            ell bin centers
+            sim_ids
+            param_names
+            BuildStats
     """
     # Expand and resolve file path
     h5_path = Path(h5_path).expanduser().resolve()
@@ -139,7 +148,10 @@ def build_training_arrays(h5_path: Path,
             cl_grp = sim_grp[config.cl_group]
 
             try:
-                x = np.array([_read_scalar(params_grp[p]) for p in config.param_names], dtype=np.float64)
+                x = np.array(
+                    [_read_scalar(params_grp[p]) for p in config.param_names],
+                    dtype=np.float64,
+                )
             except KeyError:
                 n_missing_params += 1
                 continue
@@ -200,16 +212,18 @@ def build_training_arrays(h5_path: Path,
     return X, Y, ell_ref, sim_ids_out, param_names_out, stats
 
 
-def write_training_to_h5(h5_path: Path,
-                         *,
-                         X: np.ndarray,
-                         Y: np.ndarray,
-                         ell: np.ndarray,
-                         sim_ids: Sequence[str],
-                         param_names: Sequence[str],
-                         config: BuildXYConfig,
-                         overwrite: bool = True,
-                         stats: Optional[BuildStats] = None) -> int:
+def write_training_to_h5(
+    h5_path: Path,
+    *,
+    X: np.ndarray,
+    Y: np.ndarray,
+    ell: np.ndarray,
+    sim_ids: Sequence[str],
+    param_names: Sequence[str],
+    config: BuildXYConfig,
+    overwrite: bool = True,
+    stats: Optional[BuildStats] = None,
+) -> int:
     """
     Write training data to condensed HDF5 file.
 
@@ -233,7 +247,9 @@ def write_training_to_h5(h5_path: Path,
 
         # Store string arrays
         training_grp.create_dataset("sim_ids", data=np.array(sim_ids, dtype=object))
-        training_grp.create_dataset("param_names", data=np.array(param_names, dtype=object))
+        training_grp.create_dataset(
+            "param_names", data=np.array(param_names, dtype=object)
+        )
 
         # Store metadata for reproducibility
         training_grp.attrs["y_source"] = config.y_source
@@ -246,18 +262,21 @@ def write_training_to_h5(h5_path: Path,
         if stats is not None:
             training_grp.attrs["build_total_sims"] = stats.total_sims
             training_grp.attrs["build_processed"] = stats.processed
-            training_grp.attrs["build_skipped_missing_params"] = stats.skipped_missing_params
+            training_grp.attrs["build_skipped_missing_params"] = (
+                stats.skipped_missing_params
+            )
             training_grp.attrs["build_skipped_missing_cl"] = stats.skipped_missing_cl
-            training_grp.attrs["build_skipped_inconsistent_ell"] = stats.skipped_inconsistent_ell
+            training_grp.attrs["build_skipped_inconsistent_ell"] = (
+                stats.skipped_inconsistent_ell
+            )
             training_grp.attrs["build_skipped_non_finite"] = stats.skipped_non_finite
 
     return X.shape[0]
 
 
-def build_and_write_training(h5_path: Path,
-                             *,
-                             config: BuildXYConfig = BuildXYConfig(),
-                             overwrite: bool = True) -> int:
+def build_and_write_training(
+    h5_path: Path, *, config: BuildXYConfig = BuildXYConfig(), overwrite: bool = True
+) -> int:
     """
     Build and write training data to HDF5 file.
         1) Read simulations from sims
@@ -284,6 +303,7 @@ def build_and_write_training(h5_path: Path,
 
     return count
 
-#-----------------------------
+
+# -----------------------------
 #         END OF FILE
-#-----------------------------
+# -----------------------------

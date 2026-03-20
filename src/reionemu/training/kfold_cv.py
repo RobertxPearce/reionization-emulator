@@ -1,17 +1,18 @@
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # K-Fold Cross Validation utilities for reionemu training.
 #
 # KFoldConfig: Container for k-fold configuration
 # _validate_k(): Ensure k is valid
 # _make_kfold_splits(): Create shuffled index folds
-# kfold_cross_validate(): Run k-fold CV using user-provided model/optimizer builders
+# kfold_cross_validate(): Run k-fold CV using user-provided model/optimizer
+# builders
 #
 # Robert Pearce
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List
 
 import numpy as np
 import torch
@@ -31,6 +32,7 @@ class KFoldConfig:
     seed: Random seed for reproducibility
     return_histories: If True, return full loss curves for each fold
     """
+
     k: int = 5
     seed: int = 42
     return_histories: bool = False
@@ -72,24 +74,24 @@ def _make_kfold_splits(n_samples: int, *, k: int, seed: int) -> List[np.ndarray]
 
 
 def kfold_cross_validate(
-        h5_path: Path,
-        *,
-        model_builder: Callable[[], torch.nn.Module],
-        optimizer_builder: Callable[[torch.nn.Module], torch.optim.Optimizer],
-        loss_fn: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
-        kfold_config: KFoldConfig = KFoldConfig(),
-        dl_config: DataLoaderConfig = DataLoaderConfig(),
-        fit_config: FitConfig = FitConfig(),
+    h5_path: Path,
+    *,
+    model_builder: Callable[[], torch.nn.Module],
+    optimizer_builder: Callable[[torch.nn.Module], torch.optim.Optimizer],
+    loss_fn: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+    kfold_config: KFoldConfig = KFoldConfig(),
+    dl_config: DataLoaderConfig = DataLoaderConfig(),
+    fit_config: FitConfig = FitConfig(),
 ) -> Dict[str, object]:
     """
     Run K-Fold cross validation on the condensed HDF5 training dataset.
 
     h5_path: Path to condensed HDF5 file
-    model_builder: Function that returns a fresh model instance (called once per fold)
-    optimizer_builder: Function that takes model and returns optimizer (called once per fold)
+    model_builder: Function that returns a fresh model instance (once per fold)
+    optimizer_builder: Function that takes model and returns optimizer (once per fold)
     loss_fn: Loss function
     kfold_config: KFoldConfig containing k and seed
-    dl_config: DataLoaderConfig controlling batch size, shuffling, and normalization toggles
+    dl_config: DataLoaderConfig controlling batch size, shuffling, and normalization
     fit_config: FitConfig for epochs/device/early stopping
 
     return:
@@ -100,7 +102,7 @@ def kfold_cross_validate(
             "std_best_val": std of best val losses
             "models": list of trained model instances, one per fold
             "norms": list of dicts per fold, each with keys "X" and "Y" containing
-                     the fitted standardizer for that fold (None if normalization disabled)
+                     the fitted standardizer for that fold (None if norm disabled)
             "val_indices": list of np.ndarray of validation indices per fold
             "histories": (optional) list of history dicts for each fold
     """
@@ -108,7 +110,9 @@ def kfold_cross_validate(
     X, Y, ell = load_training_arrays(Path(h5_path))
 
     # Create folds (each fold is the validation indices for that fold)
-    folds = _make_kfold_splits(n_samples=len(X), k=kfold_config.k, seed=kfold_config.seed)
+    folds = _make_kfold_splits(
+        n_samples=len(X), k=kfold_config.k, seed=kfold_config.seed
+    )
 
     # Store best val loss for each fold
     fold_best_val: List[float] = []
@@ -127,7 +131,9 @@ def kfold_cross_validate(
         val_idx = folds[fold_id]
 
         # Training indices are all indices not in val_idx
-        train_idx = np.concatenate([folds[i] for i in range(kfold_config.k) if i != fold_id])
+        train_idx = np.concatenate(
+            [folds[i] for i in range(kfold_config.k) if i != fold_id]
+        )
 
         x_norm = None
         y_norm = None
@@ -165,7 +171,10 @@ def kfold_cross_validate(
         optimizer = optimizer_builder(model)
 
         # Print progress
-        print(f"\n=== Fold {fold_id + 1}/{kfold_config.k} | train={len(train_idx)} val={len(val_idx)} ===")
+        print(
+            f"\n=== Fold {fold_id + 1}/{kfold_config.k} | "
+            f"train={len(train_idx)} val={len(val_idx)} ==="
+        )
 
         # Train the fold
         history = fit(
@@ -181,10 +190,12 @@ def kfold_cross_validate(
         fold_models.append(model)
 
         # Save norms for this fold
-        fold_norms.append({
-            "X": x_norm if dl_config.normalize_X else None,
-            "Y": y_norm if dl_config.normalize_Y else None,
-        })
+        fold_norms.append(
+            {
+                "X": x_norm if dl_config.normalize_X else None,
+                "Y": y_norm if dl_config.normalize_Y else None,
+            }
+        )
 
         # Save val indices
         fold_val_indices.append(val_idx)
@@ -208,7 +219,7 @@ def kfold_cross_validate(
         "std_best_val": float(vals.std(ddof=1)) if len(vals) > 1 else 0.0,
         "models": fold_models,
         "norms": fold_norms,
-        "val_indices": fold_val_indices
+        "val_indices": fold_val_indices,
     }
 
     # Attach histories if requested
@@ -217,6 +228,7 @@ def kfold_cross_validate(
 
     # Return summary
     return result
+
 
 # -----------------------------
 #         END OF FILE

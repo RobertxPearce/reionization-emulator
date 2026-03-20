@@ -1,9 +1,9 @@
-# ------------------------------------------------------------------------------------------
-# Defines the 4 parameter POC neural network architecture used to predict the kSZ
-# angular power spectrum from reionization parameters.
+# -----------------------------------------------------------------------------
+# Defines the 4 parameter POC neural network architecture used to predict
+# the kSZ angular power spectrum from reionization parameters.
 #
 # Robert Pearce
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import torch.nn as nn
 
@@ -11,7 +11,8 @@ import torch.nn as nn
 class FourParamEmulator(nn.Module):
     def __init__(self):
         """
-        POC NN for predicting the binned kSZ angular power spectrum from reionization parameters.
+        POC NN for predicting the binned kSZ angular power spectrum from reionization
+        parameters.
         Input: Tensor of shape (N, 4) containing (zmean, alpha, kb, b0)
         Output: Tensor of shape (N, 5) containing log(D_ell) for 5 ell bins
         Architecture: 4 -> 20 -> 20 -> 5 (ReLU)
@@ -24,7 +25,6 @@ class FourParamEmulator(nn.Module):
 
         self.activation = nn.ReLU()
 
-
     def forward(self, x):
         x = self.activation(self.fc1(x))
         x = self.activation(self.fc2(x))
@@ -32,6 +32,7 @@ class FourParamEmulator(nn.Module):
 
         return x
 
-#-----------------------------
+
+# -----------------------------
 #         END OF FILE
-#-----------------------------
+# -----------------------------

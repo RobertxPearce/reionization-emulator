@@ -3,15 +3,14 @@
 # Robert Pearce
 # ------------------------------------------------------------------------------------------
 
-import numpy as np
 from scipy.stats import qmc
 
 # Params and their bounds
 PARAMS = [
     ("zmean", 7.0, 9.0),
     ("alpha", 0.10, 0.90),
-    ("kb",    0.10, 2.0),
-    ("b0", 0.10, 0.80), # Updated From [0.40, 2.0]
+    ("kb", 0.10, 2.0),
+    ("b0", 0.10, 0.80),  # Updated From [0.40, 2.0]
 ]
 
 
@@ -66,7 +65,17 @@ def print_table(runs):
 
 def main():
     # Sample one parameter with fixed values for the other parameters
-    runs = lhs_one_param(params=PARAMS, sample_name="b0", n=4, seed=3, fixed={"zmean": 7.8739127780643505, "alpha": 0.2292734227025891, "kb": 1.5829409586172485})
+    runs = lhs_one_param(
+        params=PARAMS,
+        sample_name="b0",
+        n=4,
+        seed=3,
+        fixed={
+            "zmean": 7.8739127780643505,
+            "alpha": 0.2292734227025891,
+            "kb": 1.5829409586172485,
+        },
+    )
 
     # Sample one parameter with other params defaulting to midpoint
     # runs = lhs_one_param(params=PARAMS, sample_name="b0", n=4, seed=42, fixed=None)
@@ -74,10 +83,9 @@ def main():
     print_table(runs)
 
 
-
 if __name__ == "__main__":
     main()
 
-#-----------------------------
+# -----------------------------
 #         END OF FILE
-#-----------------------------
+# -----------------------------

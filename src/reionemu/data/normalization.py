@@ -1,13 +1,14 @@
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Standardization utilities.
 #
-# Normalizer: Container for mean and standard deviations stored as N-dimensional arrays
+# Normalizer: Container for mean and standard deviations stored as
+# N-dimensional arrays
 # fit_standardizer(): Compute mean and std of input array (feature-wise)
 # transform_standardizer(): Apply standardization
 # inverse_transform_standardizer(): Undo standardization
 #
 # Robert Pearce
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import numpy as np
 from dataclasses import dataclass

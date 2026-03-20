@@ -1,6 +1,6 @@
-# ------------------------------------------------------------------------------------------
-# Utilities to compute angular power spectrum (flat-sky) from kSZ map and write into
-# condensed HDF5.
+# -----------------------------------------------------------------------------
+# Utilities to compute angular power spectrum (flat-sky) from kSZ map and
+# write into condensed HDF5.
 #
 # Write:
 #   /sims/sim<n>/cl/ell      : ell bin centers
@@ -18,26 +18,27 @@
 # add_cl_to_condensed_h5(): Compute and write C_ell and D_ell for every sim
 #
 # Robert Pearce
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Optional, Tuple
 
-import numpy as np
 import h5py
+import numpy as np
 
 
 @dataclass(frozen=True)
 class ClConfig:
     """
     Configuration for power spectrum computation.
-    
+
     nbins: Number of ell bins to output
     ell_cut: Minimal ell retained, full-res bins with centers < ell_cut are discarded
     overwrite: If true, overwrite existing /cl group
     sims_group: Name of the top-level sims group in the HDF5 file
     """
+
     nbins: int = 5
     ell_cut: float = 1000.0
     overwrite: bool = True
@@ -48,29 +49,30 @@ def to_microkelvin(ksz_map_dt_over_t: np.ndarray, tcmb0_K: float) -> np.ndarray:
     """
     Convert deltaT/T to microkelvin (uK).
     map_uK = (deltaT/T * Tcmb0) *1e6
-    
+
     ksz_map_dt_over_t: kSZ map
     tcmb0_K: CMB temperature
-    
+
     return: kSZ map converted to microkelvin (uK)
     """
     return (ksz_map_dt_over_t * tcmb0_K) * 1e6
 
 
-def compute_cl_flat_sky(map_uK: np.ndarray,
-                        theta_max_rad: float,
-                        nbins: int,
-                        ell_cut: float,
-                        ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def compute_cl_flat_sky(
+    map_uK: np.ndarray,
+    theta_max_rad: float,
+    nbins: int,
+    ell_cut: float,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Compute the flat-sky angular power spectrum from a kSZ map.
-    
+
     Steps:
         1) Compute full-resolution spectrum with nbins_full = N//2 bins
         2) Drop bins with ell < ell_cut
         3) Rebin remaining high-ell bins into nbins coarse bins
         4) Correct for Hann window
-    
+
     return: centers, cl, dcl
     """
     # --------------------------------------------------------------
@@ -88,9 +90,7 @@ def compute_cl_flat_sky(map_uK: np.ndarray,
             "Flat-sky power spectrum expects a square map."
         )
     if theta_max_rad <= 0:
-        raise ValueError(
-            f"theta_max_rad must be positive, got {theta_max_rad}."
-        )
+        raise ValueError(f"theta_max_rad must be positive, got {theta_max_rad}.")
 
     T = np.array(map_uK, dtype=np.float64, copy=True)
     N = T.shape[0]
@@ -105,7 +105,7 @@ def compute_cl_flat_sky(map_uK: np.ndarray,
     # The Hann window function will reduce the overall power. A
     # normalization factor is computed to undo the loss.
     # --------------------------------------------------------------
-    
+
     # Apply a 2D window function before FFT
     window = np.hanning(N)
     window_2d = np.outer(window, window)
@@ -113,7 +113,7 @@ def compute_cl_flat_sky(map_uK: np.ndarray,
 
     # Normalize factor for the window
     window_norm = np.sum(window_2d**2) / (N**2)
-    
+
     # --------------------------------------------------------------
     # Remove the Map Mean and NaNs
     #
@@ -125,7 +125,7 @@ def compute_cl_flat_sky(map_uK: np.ndarray,
     T -= np.nanmean(T)
     # Replace any NaNs with zeros
     T = np.nan_to_num(T, copy=False)
-    
+
     # --------------------------------------------------------------
     # Angular Pixel Size and Area
     #
@@ -138,23 +138,28 @@ def compute_cl_flat_sky(map_uK: np.ndarray,
     dtheta = theta_max_rad / N
     # Compute the total patch area
     area = theta_max_rad * theta_max_rad
-    
+
     # --------------------------------------------------------------
     # Build the Fourier (multipole) Grid
     # --------------------------------------------------------------
 
-    # Compute Fast Fourier Transform frequencies and convert to multipoles (ell = 2 * pi * f)
-    fx = np.fft.fftfreq(N, d=dtheta)    # Returns frequency values corresponding to the x-axis
-    fy = np.fft.fftfreq(N, d=dtheta)    # Returns frequency values corresponding to the y-axis
+    # Compute Fast Fourier Transform frequencies and convert to multipoles
+    # (ell = 2 * pi * f)
+    fx = np.fft.fftfreq(
+        N, d=dtheta
+    )  # Returns frequency values corresponding to the x-axis
+    fy = np.fft.fftfreq(
+        N, d=dtheta
+    )  # Returns frequency values corresponding to the y-axis
 
     # Convert from frequency to multipole
-    lx = 2.0 * np.pi * fx   # l = 2*pi*fx
-    ly = 2.0 * np.pi * fy   # l = 2*pi*fy
+    lx = 2.0 * np.pi * fx  # l = 2*pi*fx
+    ly = 2.0 * np.pi * fy  # l = 2*pi*fy
 
     # Combine into a 2D grid
-    Lx, Ly = np.meshgrid(lx, ly, indexing="xy") # 2D arrays representing lx and ly
-    ell_2d = np.sqrt(Lx**2 + Ly**2)             # Compute the total angular wave number
-    
+    Lx, Ly = np.meshgrid(lx, ly, indexing="xy")  # 2D arrays representing lx and ly
+    ell_2d = np.sqrt(Lx**2 + Ly**2)  # Compute the total angular wave number
+
     # --------------------------------------------------------------
     # FFT to Raw 2D Power
     #
@@ -165,9 +170,11 @@ def compute_cl_flat_sky(map_uK: np.ndarray,
     # --------------------------------------------------------------
 
     # Perform 2D FFT and normalize
-    T_tilde = np.fft.fft2(T) * (dtheta**2)          # Compute the 2D FFT and normalize
-    P2D = (T_tilde * np.conj(T_tilde)).real / area  # Get power for each angular mode and normalize to uK^2
-    
+    T_tilde = np.fft.fft2(T) * (dtheta**2)  # Compute the 2D FFT and normalize
+    P2D = (
+        T_tilde * np.conj(T_tilde)
+    ).real / area  # Get power for each angular mode and normalize to uK^2
+
     # --------------------------------------------------------------
     # Define the ell Range and Full-Resolution Bins
     #
@@ -178,18 +185,20 @@ def compute_cl_flat_sky(map_uK: np.ndarray,
     # --------------------------------------------------------------
 
     # Define ell range and bins
-    ell_min = 2.0 * np.pi / theta_max_rad   # Compute smallest ell (large-scale features)
-    ell_max = ell_min * (N / 2.0)           # Compute largest ell (small-scale structures)
+    ell_min = 2.0 * np.pi / theta_max_rad  # Compute smallest ell (large-scale features)
+    ell_max = ell_min * (N / 2.0)  # Compute largest ell (small-scale structures)
 
-    nbins_full = N // 2                     # Full-resolution bins
+    nbins_full = N // 2  # Full-resolution bins
 
     # --------------------------------------------------------------
     # Create the full-res bin edges and centers
     # --------------------------------------------------------------
 
-    edges = np.linspace(ell_min, ell_max, nbins_full + 1)  # Evenly spaced boundaries from ell_min to ell_max
-    centers = 0.5 * (edges[1:] + edges[:-1])               # Midpoint of each full-res bin
-    
+    edges = np.linspace(
+        ell_min, ell_max, nbins_full + 1
+    )  # Evenly spaced boundaries from ell_min to ell_max
+    centers = 0.5 * (edges[1:] + edges[:-1])  # Midpoint of each full-res bin
+
     # --------------------------------------------------------------
     # Flatten
     #
@@ -202,7 +211,7 @@ def compute_cl_flat_sky(map_uK: np.ndarray,
     # Flatten arrays for binning
     flat_ell = ell_2d.ravel()
     flat_P = P2D.ravel()
-    
+
     # --------------------------------------------------------------
     # Drop the Zero Mode
     #
@@ -215,31 +224,33 @@ def compute_cl_flat_sky(map_uK: np.ndarray,
     mask_nonzero = flat_ell > 0
     flat_ell = flat_ell[mask_nonzero]
     flat_P = flat_P[mask_nonzero]
-    
+
     # --------------------------------------------------------------
     # Initialize cl, dcl, counts
     # --------------------------------------------------------------
 
-    cl = np.empty(nbins_full, dtype=np.float64)      # Full-res averaged C_ell in each bin
-    dcl = np.empty(nbins_full, dtype=np.float64)     # Full-res uncertainties
-    counts = np.empty(nbins_full, dtype=np.int64)    # How many modes per full-res bin
-    
+    cl = np.empty(nbins_full, dtype=np.float64)  # Full-res averaged C_ell in each bin
+    dcl = np.empty(nbins_full, dtype=np.float64)  # Full-res uncertainties
+    counts = np.empty(nbins_full, dtype=np.int64)  # How many modes per full-res bin
+
     # --------------------------------------------------------------
     # Full resolution binning: N/2 ell-bins
     # --------------------------------------------------------------
 
-    inds = np.digitize(flat_ell, edges) - 1     # Use digitize to look at every ell and determine which bin it belongs too
+    inds = (
+        np.digitize(flat_ell, edges) - 1
+    )  # Use digitize to look at every ell and determine which bin it belongs too
 
-    for i in range(nbins_full):                 # Loop through each full-res ell bin
-        sel = inds == i                         # Select only the Fourier modes belonging to bin i
-        counts[i] = np.count_nonzero(sel)       # Count how many pixels fell into bin i
+    for i in range(nbins_full):  # Loop through each full-res ell bin
+        sel = inds == i  # Select only the Fourier modes belonging to bin i
+        counts[i] = np.count_nonzero(sel)  # Count how many pixels fell into bin i
         if counts[i] > 0:
-            cl[i] = np.mean(flat_P[sel])        # Average power in this full-res bin
-            dcl[i] = cl[i] / np.sqrt(counts[i]) # Standard error of the mean
+            cl[i] = np.mean(flat_P[sel])  # Average power in this full-res bin
+            dcl[i] = cl[i] / np.sqrt(counts[i])  # Standard error of the mean
         else:
-            cl[i] = np.nan                      # If no modes fell into bin put NaN
+            cl[i] = np.nan  # If no modes fell into bin put NaN
             dcl[i] = np.nan
-            
+
     # --------------------------------------------------------------
     # Cut at ell_cut and rebin into nbins coarse bins
     #   1) Keep only centers >= ell_cut
@@ -247,11 +258,15 @@ def compute_cl_flat_sky(map_uK: np.ndarray,
     # --------------------------------------------------------------
 
     # Keep only high-ell part of the full-resolution spectrum
-    mask_high = centers >= ell_cut      # Boolean array containing if each entry is >= ell_cut
-    ell_high = centers[mask_high]       # Keep only ell bin centers >= ell_cut
-    cl_high = cl[mask_high]             # Keep only the cl for ell bin centers >= ell_cut
-    dcl_high = dcl[mask_high]           # Keep only the dl for ell bin centers >= ell_cut
-    counts_high = counts[mask_high]     # Keep the number of Fourier modes contributing to each high ell bin
+    mask_high = (
+        centers >= ell_cut
+    )  # Boolean array containing if each entry is >= ell_cut
+    ell_high = centers[mask_high]  # Keep only ell bin centers >= ell_cut
+    cl_high = cl[mask_high]  # Keep only the cl for ell bin centers >= ell_cut
+    dcl_high = dcl[mask_high]  # Keep only the dl for ell bin centers >= ell_cut
+    counts_high = counts[
+        mask_high
+    ]  # Keep the number of Fourier modes contributing to each high ell bin
 
     # If nbins >= number of available high-ell bins, just return the high-res part
     if nbins >= len(ell_high):
@@ -305,7 +320,7 @@ def compute_dl(ell: np.ndarray, cl: np.ndarray) -> np.ndarray:
     """
     Convert C_ell to D_ell: D_ell = ell * (ell + 1) * C_ell / (2 * pi).
     Units are microK^2 if C_ell is microK^2.
-    
+
     return: dl
     """
     ell = np.asarray(ell, dtype=np.float64)
@@ -313,11 +328,12 @@ def compute_dl(ell: np.ndarray, cl: np.ndarray) -> np.ndarray:
     return ell * (ell + 1.0) * cl / (2.0 * np.pi)
 
 
-def add_cl_to_condensed_h5(h5_path: Path,
-                           *,
-                           config: ClConfig = ClConfig(),
-                           progress_callback: Optional[Callable[[int, int], None]] = None,
-                           ) -> int:
+def add_cl_to_condensed_h5(
+    h5_path: Path,
+    *,
+    config: ClConfig = ClConfig(),
+    progress_callback: Optional[Callable[[int, int], None]] = None,
+) -> int:
     """
     Compute and write /cl for every sim in a condensed HDF5 file.
 
@@ -403,6 +419,7 @@ def add_cl_to_condensed_h5(h5_path: Path,
 
     return updated
 
-#-----------------------------
+
+# -----------------------------
 #         END OF FILE
-#-----------------------------
+# -----------------------------

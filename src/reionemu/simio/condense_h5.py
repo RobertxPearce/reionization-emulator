@@ -1,6 +1,6 @@
-# ------------------------------------------------------------------------------------------
-# Utilities for condensing simulation HDF5 outputs into smaller HDF5 files to prepare for
-# angular spectrum calculation and NN training datasets.
+# -----------------------------------------------------------------------------
+# Utilities for condensing simulation HDF5 outputs into smaller HDF5 files
+# to prepare for angular spectrum calculation and NN training datasets.
 #
 # Pipeline:
 #   raw per-sim HDF5 outputs -> one condensed HDF5 with consistent layout
@@ -14,14 +14,14 @@
 # condense_sim_root(): Orchestrate the full condense over sim<n>/ directories
 #
 # Robert Pearce
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, Optional, Tuple
 
-import numpy as np
 import h5py
+import numpy as np
 
 
 @dataclass(frozen=True)
@@ -32,6 +32,7 @@ class CondenseConfig:
     overwrite: Overwrite output file if it exists
     require_obs_and_pk: If True, skip sims missing either OBS or PK files
     """
+
     overwrite: bool = True
     require_obs_and_pk: bool = True
 
@@ -41,6 +42,7 @@ class CondenseStats:
     """
     Counts of written and skipped simulations when condensing.
     """
+
     written: int
     skipped_missing_obs_pk: int
     skipped_read_error: int
@@ -53,18 +55,18 @@ class CondenseStats:
             + self.skipped_read_error
             + self.skipped_validation_error
         )
-    
-    
+
+
 def find_obs_and_pk_files(sim_dir: Path) -> Tuple[Optional[Path], Optional[Path]]:
     """
     Locate OBS Grids and PK Arrays files inside a sim directory.
-    
+
     return: (obs_file, pk_file) paths from a single simulation directory
     """
     # Path for obs and pk files
     obs_file: Optional[Path] = None
     pk_file: Optional[Path] = None
-    
+
     # Build list of files with extensions .h5 or .hdf5 sorted
     for fp in sorted(list(sim_dir.glob("*.h5")) + list(sim_dir.glob("*.hdf5"))):
         try:
@@ -82,14 +84,16 @@ def find_obs_and_pk_files(sim_dir: Path) -> Tuple[Optional[Path], Optional[Path]
     return obs_file, pk_file
 
 
-def _read_header_scalar(group: h5py.Group, key: str, *, default: float = float("nan")) -> float:
+def _read_header_scalar(
+    group: h5py.Group, key: str, *, default: float = float("nan")
+) -> float:
     """
     Helper function for reading scalars from header dataset.
-    
+
     group: HDF5 group that contains scalar datasets (f["header"])
     key: name of the dataset inside that group
     default: value to return if key is not in group
-    
+
     returns: Scalar value or NaN if missing
     """
     # Check if name is not in header
@@ -107,19 +111,19 @@ def read_pk_fields(pk_path: Path) -> Dict[str, object]:
     Open the PK Array file and extract:
         Arrays: pk_tt, xmval_list, zval_list
         Scalars: alpha_zre, b0_zre, kb_zre, zmean_zre, tau
-        
+
     pk_path: Path to the PK Arrays file
-    
+
     return: Dict with arrays and scalars from the PK arrays file
     """
     with h5py.File(pk_path, "r") as f:
         pk_tt = f["data/pk_tt"][()]
         xm = f["data/xmval_list"][()]
         zz = f["data/zval_list"][()]
-        
+
         # Scalar params/outputs live in header
         hdr = f["header"]
-        
+
         return {
             "pk_tt": pk_tt,
             "xmval_list": xm,
@@ -137,16 +141,16 @@ def read_obs_fields(obs_path: Path) -> Dict[str, object]:
     Open the OBS Grids file and extract:
         Arrays: ksz_map
         Scalars: Tcmb0, theta_max_ksz
-        
+
     obs_path: Path to the OBS Grids file
-    
+
     return: Dict with arrays and scalars from the PK arrays file
     """
     with h5py.File(obs_path, "r") as f:
         ksz = f["data/ksz_map"][()]
         Tcmb0 = _read_header_scalar(f["header"], "Tcmb0")
         theta_max = _read_header_scalar(f["header"], "theta_max_ksz")
-        
+
         return {
             "ksz_map": ksz,
             "Tcmb0": Tcmb0,
@@ -157,23 +161,30 @@ def read_obs_fields(obs_path: Path) -> Dict[str, object]:
 def validate_payload(sim_name: str, payload: Dict[str, object]) -> None:
     """
     Validate the data for one simulation.
-    
+
     sim_name: The name of the simulation
     payload: Dict of names and values
-    
+
     raises: ValueError if required fields are missing or arrays are empty
     """
     required = [
         # Parameters
-        "alpha_zre", "b0_zre", "kb_zre", "zmean_zre",
+        "alpha_zre",
+        "b0_zre",
+        "kb_zre",
+        "zmean_zre",
         # Scalar output
         "tau",
         # Array outputs
-        "pk_tt", "xmval_list", "zval_list",
+        "pk_tt",
+        "xmval_list",
+        "zval_list",
         # Map metadata
-        "ksz_map", "Tcmb0", "theta_max_ksz",
+        "ksz_map",
+        "Tcmb0",
+        "theta_max_ksz",
     ]
-    
+
     # Ensure all required keys exists
     for k in required:
         if k not in payload or payload[k] is None:
@@ -189,10 +200,10 @@ def write_sim(sim_group: h5py.Group, payload: Dict[str, object]) -> None:
     """
     Write one simulation into the condensed HDF5 file under /sims/sim<n>/...
     Creates: params group and output group
-    
+
     sim_group: h5py.Group to write
     payload: Dict of names and values
-    
+
     return: None
     """
     gp = sim_group.create_group("params")
@@ -216,15 +227,16 @@ def write_sim(sim_group: h5py.Group, payload: Dict[str, object]) -> None:
     go.create_dataset("tau", data=float(payload["tau"]))
 
 
-def condense_sim_root(sim_root: Path,
-                      out_path: Path,
-                      *,
-                      config: CondenseConfig = CondenseConfig(),
-                      sim_prefix: str = "sim",
-                      file_description: str = "Condensed simulation outputs for kSZ 2LPT emulator.",
-                      version: int = 1,
-                      progress_callback: Optional[Callable[[int, int], None]] = None,
-                      ) -> CondenseStats:
+def condense_sim_root(
+    sim_root: Path,
+    out_path: Path,
+    *,
+    config: CondenseConfig = CondenseConfig(),
+    sim_prefix: str = "sim",
+    file_description: str = "Condensed simulation outputs for kSZ 2LPT emulator.",
+    version: int = 1,
+    progress_callback: Optional[Callable[[int, int], None]] = None,
+) -> CondenseStats:
     """
     Condense all sim<n>/ directories under sim_root into one output HDF5 file.
 
@@ -234,7 +246,7 @@ def condense_sim_root(sim_root: Path,
     sim_prefix: Subfolder name prefix to include (default "sim")
     file_description: Description of the output file
     version: Version of the output file
-    progress_callback: Optional callable(completed, total) called after each sim (e.g. for a progress bar)
+    progress_callback: Optional callable(completed, total) called after each sim
 
     returns: CondenseStats summarizing written and skipped simulations
     """
@@ -244,7 +256,9 @@ def condense_sim_root(sim_root: Path,
     if not sim_root.exists():
         raise FileNotFoundError(f"{sim_root} does not exist")
 
-    sim_dirs = sorted([d for d in sim_root.iterdir() if d.is_dir() and d.name.startswith(sim_prefix)])
+    sim_dirs = sorted(
+        [d for d in sim_root.iterdir() if d.is_dir() and d.name.startswith(sim_prefix)]
+    )
 
     if not sim_dirs:
         raise RuntimeError(f"No '{sim_prefix}*' directories found in: '{sim_root}'")
@@ -302,8 +316,6 @@ def condense_sim_root(sim_root: Path,
             if progress_callback is not None:
                 progress_callback(i + 1, total)
 
-    skipped = skipped_missing_obs_pk + skipped_read_error + skipped_validation_error
-
     stats = CondenseStats(
         written=written,
         skipped_missing_obs_pk=skipped_missing_obs_pk,
@@ -313,6 +325,7 @@ def condense_sim_root(sim_root: Path,
 
     return stats
 
-#-----------------------------
+
+# -----------------------------
 #         END OF FILE
-#-----------------------------
+# -----------------------------

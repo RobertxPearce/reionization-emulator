@@ -8,12 +8,12 @@
 from pathlib import Path
 
 from reionemu.simio import (
-    condense_sim_root,
+    BuildXYConfig,
+    ClConfig,
     CondenseConfig,
     add_cl_to_condensed_h5,
-    ClConfig,
     build_and_write_training,
-    BuildXYConfig,
+    condense_sim_root,
 )
 
 
@@ -21,15 +21,21 @@ def _progress_print(step: str):
     """
     Return a progress_callback that prints step name and percentage.
     """
+
     def callback(completed: int, total: int):
         pct = 100.0 * completed / total if total else 0
         print(f"\r{step} {completed}/{total} ({pct:.1f}%)", end="", flush=True)
+
     return callback
 
 
 def main():
-    raw_sim_root = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/raw/sims_v6")
-    condensed_h5 = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/processed/TEST.h5")
+    raw_sim_root = Path(
+        r"/Users/robertxpearce/Desktop/reionization-emulator/data/raw/sims_v6"
+    )
+    condensed_h5 = Path(
+        r"/Users/robertxpearce/Desktop/reionization-emulator/data/processed/TEST.h5"
+    )
 
     print("1) Condensing raw simulation outputs")
     stats = condense_sim_root(
@@ -67,10 +73,11 @@ def main():
 
     print("Finished building condensed dataset with /cl and /training")
     print(f"Output: {condensed_h5}")
-    
+
+
 if __name__ == "__main__":
     main()
 
-#-----------------------------
+# -----------------------------
 #         END OF FILE
-#-----------------------------
+# -----------------------------

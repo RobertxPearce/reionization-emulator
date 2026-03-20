@@ -1,8 +1,8 @@
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Experimental / proof-of-concept emulator architectures.
 # These variants are not part of the stable API. Use the baseline models
 # (FourParamEmulator, ThreeParamEmulator) for production workflows.
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from .four_param_variants import (
     POCEmulatorFourParamsV1,

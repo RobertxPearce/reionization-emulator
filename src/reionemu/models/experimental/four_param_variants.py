@@ -1,9 +1,11 @@
-# ------------------------------------------------------------------------------------------
-# Experimental 4-parameter POC neural network variants for the kSZ angular power spectrum.
+# -----------------------------------------------------------------------------
+# Experimental 4-parameter POC neural network variants for the kSZ angular
+# power spectrum.
+#
 # For stable baseline use FourParamEmulator from reionemu.models.
 #
 # Robert Pearce
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 import torch.nn as nn
 
@@ -11,7 +13,8 @@ import torch.nn as nn
 class POCEmulatorFourParamsV1(nn.Module):
     def __init__(self):
         """
-        POC NN for predicting the binned kSZ angular power spectrum from reionization parameters.
+        POC NN for predicting the binned kSZ angular power spectrum from reionization
+        parameters.
         Input: Tensor of shape (N, 4) containing (zmean, alpha, kb, b0)
         Output: Tensor of shape (N, 5) containing log(D_ell) for 5 ell bins
         Architecture: 4 -> 20 -> 5 (GELU)
@@ -33,7 +36,8 @@ class POCEmulatorFourParamsV1(nn.Module):
 class POCEmulatorFourParamsV2(nn.Module):
     def __init__(self):
         """
-        POC NN for predicting the binned kSZ angular power spectrum from reionization parameters.
+        POC NN for predicting the binned kSZ angular power spectrum from reionization
+        parameters.
         Input: Tensor of shape (N, 4) containing (zmean, alpha, kb, b0)
         Output: Tensor of shape (N, 5) containing log(D_ell) for 5 ell bins
         Architecture: 4 -> 20 -> 20 -> 20 -> 5 (ReLU + Dropout=0.1)
@@ -64,7 +68,8 @@ class POCEmulatorFourParamsV2(nn.Module):
 class POCEmulatorFourParamsV3(nn.Module):
     def __init__(self):
         """
-        POC NN for predicting the binned kSZ angular power spectrum from reionization parameters.
+        POC NN for predicting the binned kSZ angular power spectrum from reionization
+        parameters.
         Input: Tensor of shape (N, 4) containing (zmean, alpha, kb, b0)
         Output: Tensor of shape (N, 5) containing log(D_ell) for 5 ell bins
         Architecture: 4 -> 20 -> 20 -> 5 (ReLU)

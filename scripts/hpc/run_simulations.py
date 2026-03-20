@@ -3,14 +3,14 @@
 # Robert Pearce
 # ------------------------------------------------------------------------------------------
 
-from pathlib import Path
 import subprocess as sp
-from scipy.stats import qmc
+from pathlib import Path
 
+from scipy.stats import qmc
 
 # Path to simulation executable and output directory
 EXEC = Path("/jet/home/rpearce/software/ksz_2lpt/ksz_2lpt.x")
-OUT  = Path("~/ocean/raw/sims_v6").expanduser()
+OUT = Path("~/ocean/raw/sims_v6").expanduser()
 
 # Number of samples / simulations
 NUM_SAMPLES = 1_000
@@ -21,8 +21,8 @@ SEED = 123
 PARAMS = [
     ("zmean", 7.0, 9.0),
     ("alpha", 0.10, 0.90),
-    ("kb",    0.10, 2.0),
-    ("b0", 0.10, 0.80), # Updated From [0.40, 2.0]
+    ("kb", 0.10, 2.0),
+    ("b0", 0.10, 0.80),  # Updated From [0.40, 2.0]
 ]
 
 
@@ -38,7 +38,7 @@ def latin_hypercube(bounds, n, seed):
     # Draw n samples in the unit hypercube [0,1]^d
     unit = sampler.random(n=n)
     # Separate the lower and upper bounds for each param
-    lows  = [lo for (lo, hi) in bounds]
+    lows = [lo for (lo, hi) in bounds]
     highs = [hi for (lo, hi) in bounds]
     # Scale each column of params from [0,1] to [lo, hi]
     return qmc.scale(unit, lows, highs)
@@ -71,7 +71,7 @@ def run_samples(samples, outroot):
             log.write(f"sim{i}\t{row[0]}\t{row[1]}\t{row[2]}\t{row[3]}\t{rc}\n")
             log.flush()
             # Print progress: run number + return code
-            print(f"[{i+1}/{len(samples)}] rc={rc}")
+            print(f"[{i + 1}/{len(samples)}] rc={rc}")
 
 
 def main():
@@ -88,6 +88,6 @@ def main():
 if __name__ == "__main__":
     main()
 
-#-----------------------------
+# -----------------------------
 #         END OF FILE
-#-----------------------------
+# -----------------------------
