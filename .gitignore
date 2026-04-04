@@ -6,6 +6,10 @@ data/raw/**/*.hdf5
 data/tau_tests/**/*.hdf5
 results/
 checkpoints/
+ray_results/
+
+# Dist files
+dist/
 
 # Keep directories
 !data/raw/

@@ -1,8 +1,6 @@
 # -----------------------------------------------------------------------------
-# Experimental 3-parameter POC neural network for the kSZ angular power
-# spectrum.
-#
-# For stable baseline use ThreeParamEmulator from reionemu.models.
+# Defines the 3 parameter POC neural network architecture used to predict the
+# kSZ angular power spectrum from reionization parameters.
 #
 # Robert Pearce
 # -----------------------------------------------------------------------------
@@ -31,3 +29,8 @@ class POCEmulatorThreeParams(nn.Module):
         x = self.out(x)
 
         return x
+
+
+# -----------------------------
+#         END OF FILE
+# -----------------------------

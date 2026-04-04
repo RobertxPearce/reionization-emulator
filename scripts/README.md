@@ -36,3 +36,10 @@ The **core library** is in `src/reionemu/` and is pip-installable; these scripts
 
 - **[build_training_h5.py](dataset/build_training_h5.py)**  
   Builds a training-ready HDF5 dataset from simulation outputs (inputs = parameters, targets = angular power spectra).
+
+---
+
+## training/
+
+- **[tune_four_param_emu.py](training/tune_four_param_emu.py)**
+  Script for using **reionemu** Ray Tune and training utilities to tune the four-parameter model.

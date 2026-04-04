@@ -28,15 +28,26 @@ reionemu.load_training_arrays(...)
 reionemu.DataLoaderConfig
 reionemu.Normalizer
 
-# Models (baseline)
+# Models (baseline + experimental)
 reionemu.FourParamEmulator
-reionemu.ThreeParamEmulator
+reionemu.models.experimental.POCEmulatorThreeParams
 
-# Training
+# Training loops, metrics, builders, and tuning
 reionemu.fit(...)
 reionemu.FitConfig
+reionemu.train_one_epoch(...)
+reionemu.evaluate(...)
+reionemu.evaluate_metrics(...)
 reionemu.kfold_cross_validate(...)
 reionemu.KFoldConfig
+reionemu.build_four_param_model(...)
+reionemu.build_optimizer(...)
+reionemu.mse(...)
+reionemu.rmse(...)
+reionemu.mean_relative_error(...)
+reionemu.train_four_param_tune(...)
+reionemu.default_param_space(...)
+reionemu.run_tune_four_param(...)
 ```
 
 Experimental POC architectures live in `reionemu.models.experimental`.
@@ -111,7 +122,6 @@ Simulation I/O and preprocessing.
 ### models/
 
 - **four_param_emulator.py** — `FourParamEmulator`: 4 → 20 → 20 → 5 (ReLU), 5 spectrum bins.
-- **three_param_emulator.py** — `ThreeParamEmulator`: 3 → 5 → 5 (GELU), 5 spectrum bins.
 - **experimental/** — POC variants: `POCEmulatorFourParamsV1/V2/V3`, `POCEmulatorThreeParams`. Import from `reionemu.models.experimental`.
 
 ### training/
@@ -120,6 +130,9 @@ Simulation I/O and preprocessing.
   - `FitConfig` (epochs, device, optional early stopping patience, optional gradient clipping)
   - `fit()` trains for many epochs, prints losses each epoch, supports early stopping and restores best weights when used
 - **kfold_cv.py** — `KFoldConfig`, `kfold_cross_validate(h5_path, model_builder=..., ...)`.
+- **builders.py** — `build_four_param_model(config)`, `build_optimizer(model, config)`.
+- **metrics.py** — `mse(pred, target)`, `rmse(pred, target)`, `mean_relative_error(pred, target)`.
+- **tune_four_param.py** — Ray Tune helpers: `train_four_param_tune`, `default_param_space`, `run_tune_four_param`.
 
 ---
 

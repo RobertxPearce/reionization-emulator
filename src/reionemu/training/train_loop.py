@@ -4,11 +4,14 @@
 # FitConfig: Container for training configurations
 # train_one_epoch(): Train the given model for one epoch
 # evaluate(): Evaluate the given model for one epoch
+# evaluate_metrics(): Calculates the average loss and optionally any
+# additional scalar metrics provided in the "metrics" dictionary.
 # fit(): Train for many epochs with optional early stopping
 #
 # Robert Pearce
 # -----------------------------------------------------------------------------
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Dict, Optional
 
@@ -115,12 +118,71 @@ def evaluate(model, loader, loss_fn, device) -> float:
     return total / len(loader.dataset)
 
 
+@torch.no_grad()
+def evaluate_metrics(
+    model, loader, loss_fn, device, metrics: dict | None = None
+) -> dict:
+    """
+    Evaluate the model over the full loader.
+
+    Calculates the average loss and optionally any additional scalar metrics
+    provided in the "metrics" dictionary.
+
+    return: Dict {"loss": ... , "rmse": ... , "relative_error": ...}
+    """
+    # Put model in eval mode
+    model.eval()
+    # Counts for loss and examples
+    total_loss = 0.0
+    total_examples = 0
+
+    # Initialize metric sums and names dict
+    metric_sums = {}
+    if metrics is None:
+        metrics = {}
+
+    # Loop over loader
+    for xb, yb in loader:
+        # Send tensors to device
+        xb = xb.to(device)
+        yb = yb.to(device)
+
+        # Predict and calculate loss
+        pred = model(xb)
+        loss = loss_fn(pred, yb)
+
+        # Update counts
+        batch_size = xb.size(0)
+        total_loss += loss.item() * batch_size
+        total_examples += batch_size
+
+        # Calculate metrics for batch
+        for name, fn in metrics.items():
+            value = fn(pred, yb).item()
+            metric_sums[name] = metric_sums.get(name, 0.0) + value * batch_size
+
+    # Calculate total loss
+    result = {"loss": total_loss / total_examples}
+    for name, total in metric_sums.items():
+        result[name] = total / total_examples
+
+    return result
+
+
 def fit(
-    model, train_loader, val_loader, optimizer, loss_fn, config: FitConfig
+    model,
+    train_loader,
+    val_loader,
+    optimizer,
+    loss_fn,
+    config: FitConfig,
+    metrics: Optional[
+        Dict[str, Callable[[torch.Tensor, torch.Tensor], torch.Tensor]]
+    ] = None,
 ) -> Dict[str, list]:
     """
     Train model for many epochs with optional early stopping.
-    Calls train_one_epoch() and evaluate().
+    Calls train_one_epoch() and evaluate_metrics().
 
     model: The neural network to train
     train_loader: Dataloader giving batches (xb, yb)
@@ -128,7 +190,9 @@ def fit(
     optimizer: Optimizer to use
     loss_fn: Loss function
     config: Configuration for epochs, device, early_stopping_patience,
-    and gradient_clipping
+        and gradient_clipping
+    metrics: Optional dict of extra validation metrics, e.g.
+        {"rmse": rmse, "relative_error": mean_relative_error}
 
     return: Training and validation history
     """
@@ -138,8 +202,15 @@ def fit(
     # Move model to device
     model = model.to(device)
 
+    # Initialize metrics dict
+    if metrics is None:
+        metrics = {}
+
     # Initialize dict for train and validation loss history
     history = {"train_loss": [], "val_loss": []}
+    # Add optinal metrics
+    for name in metrics:
+        history[f"val_{name}"] = []
 
     # Initialize variable for best validation seen so far
     best_val = float("inf")
@@ -159,15 +230,23 @@ def fit(
             device,
             gradient_clipping=config.gradient_clipping,
         )
-        # Validate the epoch
-        val_loss = evaluate(model, val_loader, loss_fn, device)
+        # Evaluate the epoch
+        val_result = evaluate_metrics(
+            model, val_loader, loss_fn, device, metrics=metrics
+        )
+        val_loss = val_result["loss"]
 
         # Save training loss and validation loss
         history["train_loss"].append(train_loss)
         history["val_loss"].append(val_loss)
+        for name in metrics:
+            history[f"val_{name}"].append(val_result[name])
 
         # Print progress
-        print(f"Epoch {epoch:03d}: train={train_loss:.6f}, val={val_loss:.6f}")
+        metric_parts = [f"train={train_loss:.6f}", f"val={val_loss:.6f}"]
+        for name in metrics:
+            metric_parts.append(f"{name}={val_result[name]:.6f}")
+        print(f"Epoch {epoch:03d}: " + ", ".join(metric_parts))
 
         # Check if early stopping was set
         if config.early_stopping_patience is not None:

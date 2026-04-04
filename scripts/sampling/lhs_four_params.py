@@ -1,8 +1,8 @@
-# ------------------------------------------------------------------------------------------
-# Sample four reionization parameters (zmean, alpha, kb, and b0) using Latin Hypercube
-# Sampling and save params to txt file
+# -----------------------------------------------------------------------------
+# Sample four reionization parameters (zmean, alpha, kb, and b0) using
+# Latin Hypercube sampling and save params to a txt file.
 # Robert Pearce
-# ------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 from pathlib import Path
 

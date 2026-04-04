@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Experimental / proof-of-concept emulator architectures.
-# These variants are not part of the stable API. Use the baseline models
-# (FourParamEmulator, ThreeParamEmulator) for production workflows.
+# These variants are not part of the stable API. Use FourParamEmulator for
+# production workflows.
 # -----------------------------------------------------------------------------
 
 from .four_param_variants import (

@@ -9,7 +9,6 @@ from .data.dataloaders import (
 )
 from .data.normalization import Normalizer
 from .models.four_param_emulator import FourParamEmulator
-from .models.three_param_emulator import ThreeParamEmulator
 from .simio.build_xy import (
     BuildStats,
     BuildXYConfig,
@@ -18,8 +17,21 @@ from .simio.build_xy import (
 )
 from .simio.compute_cl import ClConfig, add_cl_to_condensed_h5
 from .simio.condense_h5 import CondenseConfig, CondenseStats, condense_sim_root
+from .training.builders import build_four_param_model, build_optimizer
 from .training.kfold_cv import KFoldConfig, kfold_cross_validate
-from .training.train_loop import FitConfig, fit
+from .training.metrics import mean_relative_error, mse, rmse
+from .training.train_loop import (
+    FitConfig,
+    evaluate,
+    evaluate_metrics,
+    fit,
+    train_one_epoch,
+)
+from .training.tune_four_param import (
+    default_param_space,
+    run_tune_four_param,
+    train_four_param_tune,
+)
 
 __all__ = [
     # simio
@@ -39,10 +51,24 @@ __all__ = [
     "Normalizer",
     # models
     "FourParamEmulator",
-    "ThreeParamEmulator",
-    # training
+    # training loops
+    "train_one_epoch",
+    "evaluate",
+    "evaluate_metrics",
     "fit",
     "FitConfig",
+    # training metrics
+    "mse",
+    "rmse",
+    "mean_relative_error",
+    # builders
+    "build_four_param_model",
+    "build_optimizer",
+    # cross-validation
     "kfold_cross_validate",
     "KFoldConfig",
+    # ray tune
+    "train_four_param_tune",
+    "default_param_space",
+    "run_tune_four_param",
 ]

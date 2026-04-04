@@ -24,7 +24,7 @@ cd reionization-emulator
 python -m pip install -e .
 ```
 
-**Requirements:** Python 3.10+, NumPy, HDF5, PyTorch.
+**Requirements:** Python 3.10+, NumPy, HDF5, PyTorch, and Ray Tune.
 
 To run the test suite:
 
@@ -73,7 +73,55 @@ history = reionemu.fit(
 print(history["val_loss"])
 ```
 
-For a full pipeline example (condense → compute power spectra → build training data → train) and scientific context, see the **[reionemu package example notebook](docs/reionemu_package_example.ipynb)**.
+If you want to tune the four-parameter architecture with Ray Tune before training a final model, you can work directly with the loaded arrays:
+
+```python
+from pathlib import Path
+
+import reionemu
+from ray import tune
+
+h5_path = Path("path/to/condensed.h5")
+X, Y, ell = reionemu.load_training_arrays(h5_path)
+
+split_idx = int(0.8 * len(X))
+X_train, X_val = X[:split_idx], X[split_idx:]
+Y_train, Y_val = Y[:split_idx], Y[split_idx:]
+
+param_space = {
+    "hidden_dim": tune.choice([20, 32, 64]),
+    "num_hidden_layers": tune.choice([1, 2, 3]),
+    "activation": tune.choice(["relu", "silu", "tanh"]),
+    "optimizer": tune.choice(["adam", "adamw"]),
+    "lr": tune.loguniform(3e-4, 2e-3),
+    "weight_decay": tune.loguniform(1e-8, 1e-4),
+    "batch_size": tune.choice([16, 32, 64]),
+    "epochs": 150,
+    "early_stopping_patience": tune.choice([10, 15]),
+    "gradient_clipping": tune.choice([None, 0.5, 1.0]),
+    "normalize_X": True,
+    "normalize_Y": False,
+}
+
+results = reionemu.run_tune_four_param(
+    X_train=X_train,
+    Y_train=Y_train,
+    X_val=X_val,
+    Y_val=Y_val,
+    param_space=param_space,
+    num_samples=20,
+    max_concurrent_trials=2,
+    device="cpu",
+    storage_path="ray_results",
+    experiment_name="four_param_search",
+)
+
+best = results.get_best_result(metric="val_loss", mode="min")
+print(best.config)
+print(best.metrics["best_val_loss"])
+```
+
+For a full pipeline example (condense → compute power spectra → build training data → tune/train/evaluate) and scientific context, see the **[reionemu package example notebook](docs/reionemu_package_example.ipynb)**.
 
 ---
 
@@ -85,18 +133,18 @@ The kinetic Sunyaev-Zel'dovich (kSZ) effect arises from the scattering of CMB ph
 
 ## Repository structure
 
-| Path | Description |
-|------|-------------|
-| **`src/reionemu/`** | Core library (pip-installable package) |
-| `src/reionemu/simio/` | Simulation I/O, power spectrum computation, training-array building |
-| `src/reionemu/data/` | Dataloaders, normalization |
-| `src/reionemu/models/` | Baseline and experimental emulator architectures |
-| `src/reionemu/training/` | Training loop, K-fold cross-validation |
-| **`scripts/`** | Dataset builder, HPC runners, sampling (environment-specific) |
-| **`notebooks/`** | Analysis and training examples |
-| **`docs/`** | Package example notebook |
-| `data/` | Raw and processed data (not tracked) |
-| `checkpoints/` | Saved models and normalization artifacts |
+| Path                     | Description                                                                            |
+|--------------------------|----------------------------------------------------------------------------------------|
+| **`src/reionemu/`**      | Core library (pip-installable package)                                                 |
+| `src/reionemu/simio/`    | Simulation I/O, power spectrum computation, training-array building                    |
+| `src/reionemu/data/`     | Dataloaders, normalization                                                             |
+| `src/reionemu/models/`   | Baseline and experimental emulator architectures                                       |
+| `src/reionemu/training/` | Training loop, K-fold cross-validation, Ray Tune utilities                             |
+| **`scripts/`**           | Dataset builder, HPC runners, sampling (environment-specific)                          |
+| **`notebooks/`**         | Analysis and training examples                                                         |
+| **`docs/`**              | Package example notebook                                                               |
+| `data/`                  | Raw and processed data (not tracked)                                                   |
+| `results/`               | Visualizations for simulation checks, parameter-space validation, and model evaluation |
 
 The **core API** is in `src/reionemu/`. Scripts under `scripts/hpc/` and `scripts/sampling/` are for cluster and sampling workflows and may use machine-specific paths; the library itself is portable.
 
@@ -108,8 +156,12 @@ Import from the top-level package after `pip install reionemu`:
 
 - **Simulation I/O:** `condense_sim_root`, `CondenseConfig`, `add_cl_to_condensed_h5`, `ClConfig`, `build_and_write_training`, `build_training_arrays`, `BuildXYConfig`, `BuildStats`, `CondenseStats`
 - **Data:** `make_dataloaders`, `load_training_arrays`, `DataLoaderConfig`, `Normalizer`
-- **Models:** `FourParamEmulator`, `ThreeParamEmulator` (experimental variants in `reionemu.models.experimental`)
-- **Training:** `fit`, `FitConfig`, `kfold_cross_validate`, `KFoldConfig`
+- **Models:** `FourParamEmulator` (experimental variants live in `reionemu.models.experimental`)
+- **Training:** `fit`, `FitConfig`, `train_one_epoch`, `evaluate`, `evaluate_metrics`, `kfold_cross_validate`, `KFoldConfig`
+- **Training helpers:** `build_four_param_model`, `build_optimizer`, `mse`, `rmse`, `mean_relative_error`
+- **Ray Tune:** `train_four_param_tune`, `default_param_space`, `run_tune_four_param`
+
+`run_tune_four_param(...)` accepts pre-split train/validation arrays plus optional `storage_path` and `experiment_name` arguments, making it easy to keep Tune runs and checkpoints inside your project directory.
 
 See [src/README.md](src/README.md) for module-level documentation.
 
@@ -120,7 +172,8 @@ See [src/README.md](src/README.md) for module-level documentation.
 1. **Parameter sampling** - Latin Hypercube Sampling over the 4D reionization parameter space.
 2. **Simulation (HPC)** - Run Zreion (or compatible) simulations; outputs per sim in HDF5.
 3. **Dataset construction** - Use `condense_sim_root` → `add_cl_to_condensed_h5` → `build_and_write_training` to produce a single condensed HDF5 with `/sims` and `/training`.
-4. **Training** - Use `make_dataloaders` and `fit` (or `kfold_cross_validate`) to train the emulator.
+4. **Hyperparameter search (optional)** - Use `load_training_arrays` and `run_tune_four_param` to search over model and optimizer settings with Ray Tune.
+5. **Training and evaluation** - Use `make_dataloaders` and `fit` (or `kfold_cross_validate`) to train and evaluate the selected emulator configuration.
 
 ---
 

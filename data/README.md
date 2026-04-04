@@ -8,7 +8,7 @@ This folder organizes all simulation outputs, intermediate products, and final d
     Format: Text files
 
 
-- **raw/** – Raw outputs directly from the Zerion Fortran simulations.  
+- **raw/** – Raw outputs directly from the Zreion Fortran simulations.
     Format: HDF5 files
 
 

@@ -17,7 +17,7 @@ Analysis and training examples. The **primary package example** (full pipeline a
 
 
 - **[poc_three_param_model.ipynb](poc_three_param_model.ipynb)**  
-    Demonstrates a proof-of-concept emulator that predicts the binned kSZ angular power spectrum from 3 reionization parameters ($\alpha$, $k_b$, $b_0$) and evaluates performance on held-out simulations.
+    Demonstrates the experimental `POCEmulatorThreeParams` model that predicts the binned kSZ angular power spectrum from 3 reionization parameters ($\alpha$, $k_b$, $b_0$) and evaluates performance on held-out simulations.
 
 
 - **[poc_four_param_model_kfold_cv.ipynb](poc_four_param_model_kfold_cv.ipynb)**  

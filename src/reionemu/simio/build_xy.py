@@ -204,8 +204,8 @@ def build_training_arrays(
             f"No valid simulations found when building training arrays. Stats: {stats}"
         )
 
-    X = np.vstack(X_rows)
-    Y = np.vstack(Y_rows)
+    X = np.vstack(X_rows).astype(np.float32)
+    Y = np.vstack(Y_rows).astype(np.float32)
     sim_ids_out = np.array(sim_ids, dtype=object)
     param_names_out = np.array(config.param_names, dtype=object)
 

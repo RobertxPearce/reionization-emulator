@@ -24,9 +24,10 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-  "numpy",
-  "h5py",
-  "torch",
+    "numpy",
+    "h5py",
+    "torch",
+    "ray[tune]>=2.0"
 ]
 
 [project.optional-dependencies]
