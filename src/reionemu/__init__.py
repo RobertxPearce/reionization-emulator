@@ -27,11 +27,7 @@ from .training.train_loop import (
     fit,
     train_one_epoch,
 )
-from .training.tune_four_param import (
-    default_param_space,
-    run_tune_four_param,
-    train_four_param_tune,
-)
+from .tuning import default_param_space, run_tune_four_param, train_four_param_tune
 
 __all__ = [
     # simio

@@ -132,7 +132,10 @@ Simulation I/O and preprocessing.
 - **kfold_cv.py** — `KFoldConfig`, `kfold_cross_validate(h5_path, model_builder=..., ...)`.
 - **builders.py** — `build_four_param_model(config)`, `build_optimizer(model, config)`.
 - **metrics.py** — `mse(pred, target)`, `rmse(pred, target)`, `mean_relative_error(pred, target)`.
-- **tune_four_param.py** — Ray Tune helpers: `train_four_param_tune`, `default_param_space`, `run_tune_four_param`.
+
+### tuning/
+
+- **four_param.py** — Ray Tune helpers: `resolve_device`, `train_four_param_tune`, `default_param_space`, `run_tune_four_param`.
 
 ---
 
@@ -141,4 +144,4 @@ Simulation I/O and preprocessing.
 1. Condense raw sim outputs → one HDF5: `condense_sim_root(...)`
 2. Compute spectra and write `/cl`: `add_cl_to_condensed_h5(...)`
 3. Build and write `/training`: `build_and_write_training(...)`
-4. Create loaders and train: `make_dataloaders(...)`, then `fit(...)` or `kfold_cross_validate(...)`
+4. Create loaders and train: `make_dataloaders(...)`, `run_tune_four_param`, then `fit(...)` or `kfold_cross_validate(...)`

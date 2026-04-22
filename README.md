@@ -139,7 +139,8 @@ The kinetic Sunyaev-Zel'dovich (kSZ) effect arises from the scattering of CMB ph
 | `src/reionemu/simio/`    | Simulation I/O, power spectrum computation, training-array building                    |
 | `src/reionemu/data/`     | Dataloaders, normalization                                                             |
 | `src/reionemu/models/`   | Baseline and experimental emulator architectures                                       |
-| `src/reionemu/training/` | Training loop, K-fold cross-validation, Ray Tune utilities                             |
+| `src/reionemu/training/` | Training loop, K-fold cross-validation, metrics, and model builders                    |
+| `src/reionemu/tuning/`   | Ray Tune integration for hyperparameter search                                         |
 | **`scripts/`**           | Dataset builder, HPC runners, sampling (environment-specific)                          |
 | **`notebooks/`**         | Analysis and training examples                                                         |
 | **`docs/`**              | Package example notebook                                                               |
@@ -159,9 +160,7 @@ Import from the top-level package after `pip install reionemu`:
 - **Models:** `FourParamEmulator` (experimental variants live in `reionemu.models.experimental`)
 - **Training:** `fit`, `FitConfig`, `train_one_epoch`, `evaluate`, `evaluate_metrics`, `kfold_cross_validate`, `KFoldConfig`
 - **Training helpers:** `build_four_param_model`, `build_optimizer`, `mse`, `rmse`, `mean_relative_error`
-- **Ray Tune:** `train_four_param_tune`, `default_param_space`, `run_tune_four_param`
-
-`run_tune_four_param(...)` accepts pre-split train/validation arrays plus optional `storage_path` and `experiment_name` arguments, making it easy to keep Tune runs and checkpoints inside your project directory.
+- **Tuning:** `train_four_param_tune`, `default_param_space`, `run_tune_four_param`
 
 See [src/README.md](src/README.md) for module-level documentation.
 

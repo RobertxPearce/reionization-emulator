@@ -26,9 +26,9 @@ from ray.tune.schedulers import ASHAScheduler
 from torch.utils.data import DataLoader, TensorDataset
 
 from ..data.normalization import fit_standardizer, transform_standardizer
-from .builders import build_four_param_model, build_optimizer
-from .metrics import mean_relative_error, rmse
-from .train_loop import evaluate_metrics, train_one_epoch
+from ..training.builders import build_four_param_model, build_optimizer
+from ..training.metrics import mean_relative_error, rmse
+from ..training.train_loop import evaluate_metrics, train_one_epoch
 
 
 def _make_loaders(
