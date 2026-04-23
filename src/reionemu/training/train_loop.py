@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional
 
 import torch
+import torch.nn as nn
 
 
 @dataclass
@@ -169,6 +170,72 @@ def evaluate_metrics(
     return result
 
 
+def _enable_dropout_only(model: nn.Module) -> None:
+    """
+    Re-enable dropout layers while keeping the rest of the model in eval mode.
+    """
+    for module in model.modules():
+        if isinstance(module, nn.Dropout):
+            module.train()
+
+
+@torch.no_grad()
+def evaluate_mc_metrics(
+    model,
+    loader,
+    loss_fn,
+    device,
+    metrics: dict | None = None,
+    n_mc_samples: int = 100,
+) -> dict:
+    """
+    Evaluate the MC-dropout model over the full loader.
+
+    Calculates the average loss and optionally any additional scalar metrics
+    provided in the "metrics" dictionary. Metrics are computed on the
+    predictive mean across stochastic dropout-enabled forward passes.
+
+    return: Dict {"loss": ... , "rmse": ... , "mean_predictive_std": ...}
+    """
+    if n_mc_samples < 2:
+        raise ValueError("n_mc_samples must be at least 2 for MC-dropout")
+
+    model.eval()
+    total_loss = 0.0
+    total_examples = 0
+    metric_sums = {}
+    total_predictive_std = 0.0
+
+    if metrics is None:
+        metrics = {}
+
+    for xb, yb in loader:
+        xb = xb.to(device)
+        yb = yb.to(device)
+
+        _enable_dropout_only(model)
+        samples = torch.stack([model(xb) for _ in range(n_mc_samples)], dim=0)
+        pred_mean = samples.mean(dim=0)
+        pred_std = samples.std(dim=0, unbiased=True)
+        loss = loss_fn(pred_mean, yb)
+
+        batch_size = xb.size(0)
+        total_loss += loss.item() * batch_size
+        total_examples += batch_size
+        total_predictive_std += pred_std.mean().item() * batch_size
+
+        for name, fn in metrics.items():
+            value = fn(pred_mean, yb).item()
+            metric_sums[name] = metric_sums.get(name, 0.0) + value * batch_size
+
+    result = {"loss": total_loss / total_examples}
+    for name, total in metric_sums.items():
+        result[name] = total / total_examples
+    result["mean_predictive_std"] = total_predictive_std / total_examples
+
+    return result
+
+
 def fit(
     model,
     train_loader,
@@ -179,6 +246,8 @@ def fit(
     metrics: Optional[
         Dict[str, Callable[[torch.Tensor, torch.Tensor], torch.Tensor]]
     ] = None,
+    evaluation: str = "evaluate_metrics",
+    n_mc_samples: int = 100,
 ) -> Dict[str, list]:
     """
     Train model for many epochs with optional early stopping.
@@ -193,6 +262,8 @@ def fit(
         and gradient_clipping
     metrics: Optional dict of extra validation metrics, e.g.
         {"rmse": rmse, "relative_error": mean_relative_error}
+    evaluation: String indicating which evaluation function to use
+    n_mc_samples: Number of stochastic passes for MC-dropout evaluation
 
     return: Training and validation history
     """
@@ -211,6 +282,8 @@ def fit(
     # Add optinal metrics
     for name in metrics:
         history[f"val_{name}"] = []
+    if evaluation == "evaluate_mc_metrics":
+        history["val_mean_predictive_std"] = []
 
     # Initialize variable for best validation seen so far
     best_val = float("inf")
@@ -230,10 +303,26 @@ def fit(
             device,
             gradient_clipping=config.gradient_clipping,
         )
-        # Evaluate the epoch
-        val_result = evaluate_metrics(
-            model, val_loader, loss_fn, device, metrics=metrics
-        )
+        
+        if evaluation == "evaluate_metrics":
+            val_result = evaluate_metrics(
+                model, val_loader, loss_fn, device, metrics=metrics
+            )
+        elif evaluation == "evaluate_mc_metrics":
+            val_result = evaluate_mc_metrics(
+                model,
+                val_loader,
+                loss_fn,
+                device,
+                metrics=metrics,
+                n_mc_samples=n_mc_samples,
+            )
+        else:
+            raise ValueError(
+                "evaluation must be 'evaluate_metrics' or "
+                "'evaluate_mc_metrics'"
+            )
+
         val_loss = val_result["loss"]
 
         # Save training loss and validation loss
@@ -241,11 +330,19 @@ def fit(
         history["val_loss"].append(val_loss)
         for name in metrics:
             history[f"val_{name}"].append(val_result[name])
+        if evaluation == "evaluate_mc_metrics":
+            history["val_mean_predictive_std"].append(
+                val_result["mean_predictive_std"]
+            )
 
         # Print progress
         metric_parts = [f"train={train_loss:.6f}", f"val={val_loss:.6f}"]
         for name in metrics:
             metric_parts.append(f"{name}={val_result[name]:.6f}")
+        if evaluation == "evaluate_mc_metrics":
+            metric_parts.append(
+                f"predictive_std={val_result['mean_predictive_std']:.6f}"
+            )
         print(f"Epoch {epoch:03d}: " + ", ".join(metric_parts))
 
         # Check if early stopping was set

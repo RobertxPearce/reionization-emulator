@@ -157,7 +157,7 @@ Import from the top-level package after `pip install reionemu`:
 
 - **Simulation I/O:** `condense_sim_root`, `CondenseConfig`, `add_cl_to_condensed_h5`, `ClConfig`, `build_and_write_training`, `build_training_arrays`, `BuildXYConfig`, `BuildStats`, `CondenseStats`
 - **Data:** `make_dataloaders`, `load_training_arrays`, `DataLoaderConfig`, `Normalizer`
-- **Models:** `FourParamEmulator` (experimental variants live in `reionemu.models.experimental`)
+- **Models:** `FourParamEmulator`, `MCDropoutEmulator` (experimental variants live in `reionemu.models.experimental`)
 - **Training:** `fit`, `FitConfig`, `train_one_epoch`, `evaluate`, `evaluate_metrics`, `kfold_cross_validate`, `KFoldConfig`
 - **Training helpers:** `build_four_param_model`, `build_optimizer`, `mse`, `rmse`, `mean_relative_error`
 - **Tuning:** `train_four_param_tune`, `default_param_space`, `run_tune_four_param`

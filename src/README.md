@@ -30,6 +30,7 @@ reionemu.Normalizer
 
 # Models (baseline + experimental)
 reionemu.FourParamEmulator
+reionemu.MCDropoutEmulator
 reionemu.models.experimental.POCEmulatorThreeParams
 
 # Training loops, metrics, builders, and tuning
@@ -122,6 +123,7 @@ Simulation I/O and preprocessing.
 ### models/
 
 - **four_param_emulator.py** — `FourParamEmulator`: 4 → 20 → 20 → 5 (ReLU), 5 spectrum bins.
+- **mc_dropout_emulator.py** — `MCDropoutEmulator`: 4 → 20 → 20 → 5 (ReLU), 5 spectrum bins.
 - **experimental/** — POC variants: `POCEmulatorFourParamsV1/V2/V3`, `POCEmulatorThreeParams`. Import from `reionemu.models.experimental`.
 
 ### training/

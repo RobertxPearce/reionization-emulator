@@ -26,3 +26,8 @@ Analysis and training examples. The **primary package example** (full pipeline a
 
 - **[poc_four_param_model.ipynb](poc_four_param_model.ipynb)**  
     Demonstrates a proof-of-concept emulator that predicts the binned kSZ angular power spectrum from four reionization parameters and evaluates performance using a train/validation split.
+
+
+- **[poc_mc_dropout_model.ipynb](poc_mc_dropout_model.ipynb)**
+    This notebook trains a 4-parameter MC-dropout emulator for the binned kSZ angular power spectrum. The model predicts $\ln(D_\ell)$, then repeated dropout-enabled forward passes are used to estimate a predictive mean and uncertainty.
+

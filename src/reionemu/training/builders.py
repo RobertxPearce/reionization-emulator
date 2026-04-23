@@ -11,6 +11,7 @@
 import torch
 
 from ..models.four_param_emulator import FourParamEmulator
+from ..models.mc_dropout_emulator import MCDropoutEmulator
 
 
 def build_four_param_model(config: dict) -> torch.nn.Module:
@@ -28,6 +29,25 @@ def build_four_param_model(config: dict) -> torch.nn.Module:
         hidden_dim=config["hidden_dim"],
         num_hidden_layers=config["num_hidden_layers"],
         activation=config["activation"],
+    )
+
+
+def build_mc_dropout_model(config: dict) -> torch.nn.Module:
+    """
+    Helper function for building the MC Dropout emulator
+    with Ray Tune specs.
+
+    config: dict containing Ray Tune configuration specs
+
+    return: MC Dropout emulator with Ray Tune specs
+    """
+    return MCDropoutEmulator(
+        input_dim=config.get("input_dim", 4),
+        output_dim=config.get("output_dim", 5),
+        hidden_dim=config["hidden_dim"],
+        num_hidden_layers=config["num_hidden_layers"],
+        activation=config["activation"],
+        dropout_rate=config.get("dropout_rate", 0.1),
     )
 
 
