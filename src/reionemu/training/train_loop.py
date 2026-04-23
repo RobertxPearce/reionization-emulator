@@ -303,7 +303,7 @@ def fit(
             device,
             gradient_clipping=config.gradient_clipping,
         )
-        
+
         if evaluation == "evaluate_metrics":
             val_result = evaluate_metrics(
                 model, val_loader, loss_fn, device, metrics=metrics
@@ -319,8 +319,7 @@ def fit(
             )
         else:
             raise ValueError(
-                "evaluation must be 'evaluate_metrics' or "
-                "'evaluate_mc_metrics'"
+                "evaluation must be 'evaluate_metrics' or 'evaluate_mc_metrics'"
             )
 
         val_loss = val_result["loss"]
@@ -331,9 +330,7 @@ def fit(
         for name in metrics:
             history[f"val_{name}"].append(val_result[name])
         if evaluation == "evaluate_mc_metrics":
-            history["val_mean_predictive_std"].append(
-                val_result["mean_predictive_std"]
-            )
+            history["val_mean_predictive_std"].append(val_result["mean_predictive_std"])
 
         # Print progress
         metric_parts = [f"train={train_loss:.6f}", f"val={val_loss:.6f}"]
