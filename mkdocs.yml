@@ -1,0 +1,51 @@
+site_name: reionemu
+site_description: Documentation for the reionemu package.
+site_url: https://robertxpearce.github.io/reionization-emulator/
+repo_url: https://github.com/RobertxPearce/reionization-emulator
+repo_name: RobertxPearce/reionization-emulator
+
+theme:
+  name: material
+  logo: assets/reionemu-logo.png
+  favicon: assets/reionemu-logo.png
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - toc.integrate
+    - content.code.copy
+  palette:
+    - scheme: slate
+      primary: black
+      accent: cyan
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+    - scheme: default
+      primary: blue grey
+      accent: cyan
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - API Overview: api-overview.md
+  - API Guides:
+      - Simulation I/O: api/simulation-io.md
+      - Data Loading: api/data-loading.md
+      - Models: api/models.md
+      - Training: api/training.md
+      - Hyperparameter Tuning: api/hyperparameter-tuning.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true

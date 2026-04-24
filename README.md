@@ -37,7 +37,7 @@ pytest tests/ -v
 
 ## Quick start
 
-After installing, you can load a processed HDF5 training dataset, create dataloaders, and train the baseline 4-parameter emulator:
+After installing, you can load a processed HDF5 training dataset, create dataloaders, and train the baseline deterministic 4-parameter emulator:
 
 ```python
 from pathlib import Path
@@ -71,6 +71,26 @@ history = reionemu.fit(
 
 # Validation loss per epoch
 print(history["val_loss"])
+```
+
+For MC-dropout experiments, use `MCDropoutEmulator` with the MC evaluation path:
+
+```python
+model = reionemu.MCDropoutEmulator(dropout_rate=0.2)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+history = reionemu.fit(
+    model,
+    loaders["train"],
+    loaders["val"],
+    optimizer,
+    torch.nn.MSELoss(),
+    config=reionemu.FitConfig(epochs=10, device="cpu"),
+    evaluation="evaluate_mc_metrics",
+    n_mc_samples=50,
+)
+
+print(history["val_mean_predictive_std"])
 ```
 
 If you want to tune the four-parameter architecture with Ray Tune before training a final model, you can work directly with the loaded arrays:
@@ -158,8 +178,8 @@ Import from the top-level package after `pip install reionemu`:
 - **Simulation I/O:** `condense_sim_root`, `CondenseConfig`, `add_cl_to_condensed_h5`, `ClConfig`, `build_and_write_training`, `build_training_arrays`, `BuildXYConfig`, `BuildStats`, `CondenseStats`
 - **Data:** `make_dataloaders`, `load_training_arrays`, `DataLoaderConfig`, `Normalizer`
 - **Models:** `FourParamEmulator`, `MCDropoutEmulator` (experimental variants live in `reionemu.models.experimental`)
-- **Training:** `fit`, `FitConfig`, `train_one_epoch`, `evaluate`, `evaluate_metrics`, `kfold_cross_validate`, `KFoldConfig`
-- **Training helpers:** `build_four_param_model`, `build_optimizer`, `mse`, `rmse`, `mean_relative_error`
+- **Training:** `fit`, `FitConfig`, `train_one_epoch`, `evaluate`, `evaluate_metrics`, `evaluate_mc_metrics`, `kfold_cross_validate`, `KFoldConfig`
+- **Training helpers:** `build_four_param_model`, `build_mc_dropout_model`, `build_optimizer`, `mse`, `rmse`, `mean_relative_error`
 - **Tuning:** `train_four_param_tune`, `default_param_space`, `run_tune_four_param`
 
 See [src/README.md](src/README.md) for module-level documentation.

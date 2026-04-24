@@ -39,9 +39,11 @@ reionemu.FitConfig
 reionemu.train_one_epoch(...)
 reionemu.evaluate(...)
 reionemu.evaluate_metrics(...)
+reionemu.evaluate_mc_metrics(...)
 reionemu.kfold_cross_validate(...)
 reionemu.KFoldConfig
 reionemu.build_four_param_model(...)
+reionemu.build_mc_dropout_model(...)
 reionemu.build_optimizer(...)
 reionemu.mse(...)
 reionemu.rmse(...)
@@ -128,11 +130,11 @@ Simulation I/O and preprocessing.
 
 ### training/
 
-- **train_loop.py** — `FitConfig`, `train_one_epoch`, `evaluate`, `fit(model, train_loader, val_loader, optimizer, loss_fn, config)`.
+- **train_loop.py** — `FitConfig`, `train_one_epoch`, `evaluate`, `evaluate_metrics`, `evaluate_mc_metrics`, `fit(model, train_loader, val_loader, optimizer, loss_fn, config)`.
   - `FitConfig` (epochs, device, optional early stopping patience, optional gradient clipping)
   - `fit()` trains for many epochs, prints losses each epoch, supports early stopping and restores best weights when used
 - **kfold_cv.py** — `KFoldConfig`, `kfold_cross_validate(h5_path, model_builder=..., ...)`.
-- **builders.py** — `build_four_param_model(config)`, `build_optimizer(model, config)`.
+- **builders.py** — `build_four_param_model(config)`, `build_mc_dropout_model(config)`, `build_optimizer(model, config)`.
 - **metrics.py** — `mse(pred, target)`, `rmse(pred, target)`, `mean_relative_error(pred, target)`.
 
 ### tuning/
