@@ -1,0 +1,1284 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the reionemu package.">
+      
+      
+      
+        <link rel="canonical" href="https://robertxpearce.github.io/reionization-emulator/api/data-loading/">
+      
+      
+        <link rel="prev" href="../simulation-io/">
+      
+      
+        <link rel="next" href="../models/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/reionemu-logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Data Loading - reionemu</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#data-loading" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="reionemu" class="md-header__button md-logo" aria-label="reionemu" data-md-component="logo">
+      
+  <img src="../../assets/reionemu-logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            reionemu
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Data Loading
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/RobertxPearce/reionization-emulator" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    RobertxPearce/reionization-emulator
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../getting-started/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Getting Started
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../api-overview/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  API Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../simulation-io/" class="md-tabs__link">
+          
+  
+  
+  API Guides
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="reionemu" class="md-nav__button md-logo" aria-label="reionemu" data-md-component="logo">
+      
+  <img src="../../assets/reionemu-logo.png" alt="logo">
+
+    </a>
+    reionemu
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/RobertxPearce/reionization-emulator" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    RobertxPearce/reionization-emulator
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../simulation-io/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Simulation I/O
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Loading
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data Loading
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-this-module-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What This Module Does
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-to-use-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When To Use It
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#typical-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typical Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#load-training-arrays" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Load Training Arrays
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Load Training Arrays">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#purpose" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#main-entry-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Main Entry Point
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typical-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typical Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#make-dataloaders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Make DataLoaders
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Make DataLoaders">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#purpose_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Purpose
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#main-entry-point_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Main Entry Point
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#split-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Split Rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#returns_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Returns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typical-usage_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typical Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#normalization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Normalization
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Normalization">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-training-only-statistics-matter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why Training-Only Statistics Matter
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-normalizers-after-prediction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using Normalizers After Prediction
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Issues
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../training/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Training
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hyperparameter-tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hyperparameter Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="data-loading">Data Loading<a class="headerlink" href="#data-loading" title="Permanent link">&para;</a></h1>
+<p>The <em>data loading</em> module reads the training arrays written by the simulation I/O workflow and prepares them for PyTorch training. It is the bridge between the processed HDF5 dataset and the model/training utilities.</p>
+<h2 id="what-this-module-does">What This Module Does<a class="headerlink" href="#what-this-module-does" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Loads <code>X</code>, <code>Y</code>, and <code>ell</code> arrays from the condensed HDF5 <code>/training</code> group</li>
+<li>Validates that loaded arrays have compatible shapes and finite values</li>
+<li>Creates reproducible, fraction-based train/validation/test splits</li>
+<li>Builds PyTorch <code>DataLoader</code> objects for each split</li>
+<li>Optionally fits and applies feature-wise normalization using training split statistics only</li>
+</ul>
+<p>This module specifically handles this step in the workflow: Load Training Data -&gt; Create DataLoaders.</p>
+<h2 id="when-to-use-it">When To Use It<a class="headerlink" href="#when-to-use-it" title="Permanent link">&para;</a></h2>
+<p>Use this module after the simulation I/O workflow has produced a condensed HDF5 file with a <code>/training</code> group. If your file only contains <code>/sims</code> and <code>/cl</code>, run <code>build_and_write_training(...)</code> first.</p>
+<p>The expected HDF5 layout is:</p>
+<pre><code>training:
+ ['X', 'Y', 'ell', 'param_names', 'sim_ids']
+</code></pre>
+<p>The required arrays are:</p>
+<ul>
+<li><code>training/X</code>: Input parameter matrix with shape <code>(n_samples, n_parameters)</code>.</li>
+<li><code>training/Y</code>: Target spectrum matrix with shape <code>(n_samples, n_ell_bins)</code>.</li>
+<li><code>training/ell</code>: Reference multipole bin centers with shape <code>(n_ell_bins,)</code>.</li>
+</ul>
+<h2 id="typical-workflow">Typical Workflow<a class="headerlink" href="#typical-workflow" title="Permanent link">&para;</a></h2>
+<pre><code class="language-python">from pathlib import Path
+
+from reionemu import DataLoaderConfig, load_training_arrays, make_dataloaders
+
+condensed_h5 = Path(&quot;path/to/condensed.h5&quot;)
+
+X, Y, ell = load_training_arrays(condensed_h5)
+
+config = DataLoaderConfig(
+    batch_size=32,
+    seed=42,
+    shuffle_train=True,
+    normalize_X=True,
+    normalize_Y=False,
+)
+
+loaders, normalizers, ell = make_dataloaders(
+    condensed_h5,
+    split={&quot;train&quot;: 0.8, &quot;val&quot;: 0.2},
+    config=config,
+)
+
+train_loader = loaders[&quot;train&quot;]
+val_loader = loaders[&quot;val&quot;]
+X_normalizer = normalizers[&quot;X&quot;]
+Y_normalizer = normalizers[&quot;Y&quot;]
+</code></pre>
+<h2 id="load-training-arrays">Load Training Arrays<a class="headerlink" href="#load-training-arrays" title="Permanent link">&para;</a></h2>
+<p><code>load_training_arrays</code> is the lowest-level public helper in this module. It reads the arrays from <code>/training</code>, casts them to <code>float32</code>, validates them, and returns NumPy arrays.</p>
+<h3 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h3>
+<p>Use this function when you want direct access to the training arrays without constructing PyTorch loaders.</p>
+<h3 id="main-entry-point">Main Entry Point<a class="headerlink" href="#main-entry-point" title="Permanent link">&para;</a></h3>
+<pre><code class="language-python">def load_training_arrays(
+    h5_path: Path,
+) -&gt; Tuple[np.ndarray, np.ndarray, np.ndarray]:
+</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">h5_path</td>
+<td style="text-align: left;"><code>Path</code></td>
+<td style="text-align: left;"><em>Required</em></td>
+<td style="text-align: left;">Path to the condensed HDF5 file containing <code>/training</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h3>
+<p>This function returns a tuple:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Return</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Shape</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>X</code></td>
+<td style="text-align: left;"><code>np.ndarray</code></td>
+<td style="text-align: left;"><code>(n_samples, n_parameters)</code></td>
+<td style="text-align: left;">Input simulation parameters</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>Y</code></td>
+<td style="text-align: left;"><code>np.ndarray</code></td>
+<td style="text-align: left;"><code>(n_samples, n_ell_bins)</code></td>
+<td style="text-align: left;">Target spectra</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ell</code></td>
+<td style="text-align: left;"><code>np.ndarray</code></td>
+<td style="text-align: left;"><code>(n_ell_bins,)</code></td>
+<td style="text-align: left;">Multipole bin centers for <code>Y</code></td>
+</tr>
+</tbody>
+</table>
+<p>All three arrays are returned as <code>float32</code>.</p>
+<h3 id="validation">Validation<a class="headerlink" href="#validation" title="Permanent link">&para;</a></h3>
+<p>Before returning, the function verifies that:</p>
+<ul>
+<li><code>X</code> and <code>Y</code> are two-dimensional.</li>
+<li><code>ell</code> is one-dimensional.</li>
+<li><code>X</code> and <code>Y</code> contain the same number of samples.</li>
+<li>The second dimension of <code>Y</code> matches the length of <code>ell</code>.</li>
+<li><code>X</code>, <code>Y</code>, and <code>ell</code> contain only finite values.</li>
+</ul>
+<p>If any check fails, a <code>ValueError</code> is raised with a description of the failed condition.</p>
+<h3 id="typical-usage">Typical Usage<a class="headerlink" href="#typical-usage" title="Permanent link">&para;</a></h3>
+<pre><code class="language-python">from pathlib import Path
+
+from reionemu import load_training_arrays
+
+condensed_h5 = Path(&quot;path/to/condensed.h5&quot;)
+
+X, Y, ell = load_training_arrays(condensed_h5)
+
+print(X.shape)
+print(Y.shape)
+print(ell.shape)
+</code></pre>
+<h2 id="make-dataloaders">Make DataLoaders<a class="headerlink" href="#make-dataloaders" title="Permanent link">&para;</a></h2>
+<p><code>make_dataloaders</code> constructs PyTorch <code>DataLoader</code> objects from the HDF5 training arrays. It supports any split names provided in the split dictionary, as long as one of them is named <code>"train"</code>.</p>
+<h3 id="purpose_1">Purpose<a class="headerlink" href="#purpose_1" title="Permanent link">&para;</a></h3>
+<p>Use this function when training or evaluating models with PyTorch. It handles array loading, validation, reproducible sample splitting, optional normalization, tensor conversion, and loader construction.</p>
+<h3 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h3>
+<pre><code class="language-python">@dataclass
+class DataLoaderConfig:
+    batch_size: int = 32
+    seed: int = 42
+    shuffle_train: bool = True
+    normalize_X: bool = True
+    normalize_Y: bool = False
+</code></pre>
+<ul>
+<li><strong>batch_size</strong>: Number of samples per batch in each <code>DataLoader</code>.</li>
+<li><strong>seed</strong>: Random seed used when assigning samples to splits.</li>
+<li><strong>shuffle_train</strong>: Whether the training loader shuffles batches each epoch.</li>
+<li><strong>normalize_X</strong>: Whether to standardize input parameters.</li>
+<li><strong>normalize_Y</strong>: Whether to standardize target spectra.</li>
+</ul>
+<h3 id="main-entry-point_1">Main Entry Point<a class="headerlink" href="#main-entry-point_1" title="Permanent link">&para;</a></h3>
+<pre><code class="language-python">def make_dataloaders(
+    h5_path: Path,
+    *,
+    split: Dict[str, float] = {&quot;train&quot;: 0.8, &quot;val&quot;: 0.2},
+    config: DataLoaderConfig = DataLoaderConfig(),
+) -&gt; Tuple[Dict[str, DataLoader], Dict[str, Optional[Normalizer]], np.ndarray]:
+</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">h5_path</td>
+<td style="text-align: left;"><code>Path</code></td>
+<td style="text-align: left;"><em>Required</em></td>
+<td style="text-align: left;">Path to the condensed HDF5 file containing <code>/training</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">split</td>
+<td style="text-align: left;"><code>Dict[str, float]</code></td>
+<td style="text-align: left;"><code>{"train": 0.8, "val": 0.2}</code></td>
+<td style="text-align: left;">Fraction-based split definition</td>
+</tr>
+<tr>
+<td style="text-align: left;">config</td>
+<td style="text-align: left;"><code>DataLoaderConfig</code></td>
+<td style="text-align: left;">Defaults</td>
+<td style="text-align: left;">DataLoader and normalization configuration</td>
+</tr>
+</tbody>
+</table>
+<h3 id="split-rules">Split Rules<a class="headerlink" href="#split-rules" title="Permanent link">&para;</a></h3>
+<p>The <code>split</code> dictionary must:</p>
+<ul>
+<li>Include a <code>"train"</code> key.</li>
+<li>Sum to <code>1.0</code>.</li>
+<li>Contain no negative fractions.</li>
+</ul>
+<p>The split order follows the insertion order of the dictionary. For each split except the last, the number of samples is computed with <code>round(fraction * n_samples)</code>. The final split receives the remaining samples so that every sample is assigned exactly once.</p>
+<p>For example:</p>
+<pre><code class="language-python">split = {&quot;train&quot;: 0.7, &quot;val&quot;: 0.15, &quot;test&quot;: 0.15}
+</code></pre>
+<p>returns loaders with keys <code>"train"</code>, <code>"val"</code>, and <code>"test"</code>.</p>
+<h3 id="returns_1">Returns<a class="headerlink" href="#returns_1" title="Permanent link">&para;</a></h3>
+<p>This function returns a tuple:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Return</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>loaders</code></td>
+<td style="text-align: left;"><code>Dict[str, DataLoader]</code></td>
+<td style="text-align: left;">PyTorch loaders keyed by split name</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>normalizers</code></td>
+<td style="text-align: left;"><code>Dict[str, Optional[Normalizer]]</code></td>
+<td style="text-align: left;">Fitted normalizers for <code>"X"</code> and <code>"Y"</code>, or <code>None</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ell</code></td>
+<td style="text-align: left;"><code>np.ndarray</code></td>
+<td style="text-align: left;">Multipole bin centers loaded from the HDF5 file</td>
+</tr>
+</tbody>
+</table>
+<p>Each loader returns batches of <code>(X_batch, Y_batch)</code> tensors.</p>
+<h3 id="typical-usage_1">Typical Usage<a class="headerlink" href="#typical-usage_1" title="Permanent link">&para;</a></h3>
+<pre><code class="language-python">from pathlib import Path
+
+from reionemu import DataLoaderConfig, make_dataloaders
+
+condensed_h5 = Path(&quot;path/to/condensed.h5&quot;)
+
+loaders, normalizers, ell = make_dataloaders(
+    condensed_h5,
+    split={&quot;train&quot;: 0.7, &quot;val&quot;: 0.15, &quot;test&quot;: 0.15},
+    config=DataLoaderConfig(
+        batch_size=64,
+        seed=123,
+        shuffle_train=True,
+        normalize_X=True,
+        normalize_Y=True,
+    ),
+)
+
+for X_batch, Y_batch in loaders[&quot;train&quot;]:
+    print(X_batch.shape, Y_batch.shape)
+    break
+</code></pre>
+<h2 id="normalization">Normalization<a class="headerlink" href="#normalization" title="Permanent link">&para;</a></h2>
+<p>The <code>Normalizer</code> dataclass stores feature-wise mean and standard deviation arrays.</p>
+<pre><code class="language-python">@dataclass
+class Normalizer:
+    mean: np.ndarray
+    std: np.ndarray
+</code></pre>
+<p>When <code>normalize_X=True</code>, <code>make_dataloaders</code> fits a normalizer on the training rows of <code>X</code> and applies it to the full dataset before constructing split loaders. When <code>normalize_Y=True</code>, the same process is applied to <code>Y</code>.</p>
+<p>Normalization is computed feature-wise along <code>axis=0</code>:</p>
+<pre><code class="language-python">X_standardized = (X - normalizer.mean) / normalizer.std
+</code></pre>
+<p>If a feature has zero standard deviation in the training split, its stored standard deviation is replaced with <code>1.0</code> to avoid division by zero.</p>
+<h3 id="why-training-only-statistics-matter">Why Training-Only Statistics Matter<a class="headerlink" href="#why-training-only-statistics-matter" title="Permanent link">&para;</a></h3>
+<p>Validation and test samples should not influence preprocessing statistics. Fitting the normalizers on the training split only keeps validation and test metrics from seeing information outside the training data.</p>
+<h3 id="using-normalizers-after-prediction">Using Normalizers After Prediction<a class="headerlink" href="#using-normalizers-after-prediction" title="Permanent link">&para;</a></h3>
+<p>If <code>normalize_Y=True</code>, model outputs are in standardized target space. Convert predictions back to the original target scale before plotting or interpreting spectra:</p>
+<pre><code class="language-python">from reionemu.data.normalization import inverse_transform_standardizer
+
+Y_pred_original = inverse_transform_standardizer(
+    Y_pred_standardized,
+    normalizers[&quot;Y&quot;],
+)
+</code></pre>
+<h2 id="common-issues">Common Issues<a class="headerlink" href="#common-issues" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><code>KeyError: 'training'</code></strong>: The HDF5 file does not contain a <code>/training</code> group. Run <code>build_and_write_training(...)</code> first.</li>
+<li><strong>Split fractions do not sum to <code>1.0</code></strong>: Adjust the split dictionary, for example <code>{"train": 0.8, "val": 0.2}</code>.</li>
+<li><strong><code>X</code> and <code>Y</code> have mismatched sample counts</strong>: Rebuild the <code>/training</code> group from a consistent set of simulations.</li>
+<li><strong>Non-finite values found</strong>: Inspect the upstream <code>/cl</code> products and the target transform used by <code>BuildXYConfig</code>.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "toc.integrate", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
