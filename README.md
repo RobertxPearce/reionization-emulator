@@ -141,7 +141,7 @@ print(best.config)
 print(best.metrics["best_val_loss"])
 ```
 
-For a full pipeline example (condense → compute power spectra → build training data → tune/train/evaluate) and scientific context, see the **[reionemu package example notebook](docs/reionemu_package_example.ipynb)**.
+For a full pipeline example (condense → compute power spectra → build training data → tune/train/evaluate), scientific context, and complete usage examples, see the full documentation: [Homepage](https://robertxpearce.github.io/reionization-emulator/)
 
 ---
 
@@ -182,7 +182,7 @@ Import from the top-level package after `pip install reionemu`:
 - **Training helpers:** `build_four_param_model`, `build_mc_dropout_model`, `build_optimizer`, `mse`, `rmse`, `mean_relative_error`
 - **Tuning:** `train_four_param_tune`, `default_param_space`, `run_tune_four_param`
 
-See [src/README.md](src/README.md) for module-level documentation.
+For full API reference, module documentation, and usage guides, visit: [Homepage](https://robertxpearce.github.io/reionization-emulator/)
 
 ---
 
