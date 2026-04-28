@@ -4,7 +4,7 @@
 
 # reionemu
 
-A modular Python package for building machine-learning emulators of the kinetic Sunyaev-Zel'dovich (kSZ) angular power spectrum from kSZ 2LPT reionization simulations. It includes tools to condense simulation outputs, compute flat-sky power spectra, assemble training datasets, and train neural networks that predict binned rescaled kSZ power spectra from reionization parameters.
+A modular Python package for building machine-learning emulators of the kinetic Sunyaev-Zel'dovich (kSZ) angular power spectrum from kSZ 2LPT reionization simulations. It includes tools to condense simulation outputs, compute flat-sky power spectra, assemble training datasets, train neural networks that predict binned rescaled kSZ power spectra from reionization parameters, and save lightweight experiment artifacts for reproducibility.
 
 The goal is to learn a fast surrogate model that maps reionization parameters → binned kSZ power spectrum, enabling rapid exploration of cosmological parameter space without re-running expensive simulations.
 
@@ -71,6 +71,24 @@ history = reionemu.fit(
 
 # Validation loss per epoch
 print(history["val_loss"])
+
+# Save a lightweight experiment artifact
+artifact_dir = reionemu.save_artifact(
+    "baseline_four_param",
+    Path("artifacts"),
+    dataset_path=h5_path,
+    dataloader_config=reionemu.DataLoaderConfig(batch_size=32, seed=42),
+    fit_config=reionemu.FitConfig(epochs=10, device="cpu"),
+    model_config={
+        "class_name": "FourParamEmulator",
+        "input_dim": 4,
+        "output_dim": 5,
+    },
+    optimizer_config={"name": "Adam", "lr": 1e-3},
+    history=history,
+    normalizers=normalizers,
+    checkpoint=model.state_dict(),
+)
 ```
 
 For MC-dropout experiments, use `MCDropoutEmulator` with the MC evaluation path:
@@ -158,6 +176,7 @@ The kinetic Sunyaev-Zel'dovich (kSZ) effect arises from the scattering of CMB ph
 | **`src/reionemu/`**      | Core library (pip-installable package)                                                 |
 | `src/reionemu/simio/`    | Simulation I/O, power spectrum computation, training-array building                    |
 | `src/reionemu/data/`     | Dataloaders, normalization                                                             |
+| `src/reionemu/artifact/` | JSON experiment manifests, config/results saving, normalizer and checkpoint sidecars    |
 | `src/reionemu/models/`   | Baseline and experimental emulator architectures                                       |
 | `src/reionemu/training/` | Training loop, K-fold cross-validation, metrics, and model builders                    |
 | `src/reionemu/tuning/`   | Ray Tune integration for hyperparameter search                                         |
@@ -177,6 +196,7 @@ Import from the top-level package after `pip install reionemu`:
 
 - **Simulation I/O:** `condense_sim_root`, `CondenseConfig`, `add_cl_to_condensed_h5`, `ClConfig`, `build_and_write_training`, `build_training_arrays`, `BuildXYConfig`, `BuildStats`, `CondenseStats`
 - **Data:** `make_dataloaders`, `load_training_arrays`, `DataLoaderConfig`, `Normalizer`
+- **Artifacts:** `save_artifact`, `save_configs`, `save_results`, `save_info`, `save_normalizers`, `load_normalizers`, `save_model_checkpoint`, `dataset_summary`, `file_fingerprint`, `read_json`
 - **Models:** `FourParamEmulator`, `MCDropoutEmulator` (experimental variants live in `reionemu.models.experimental`)
 - **Training:** `fit`, `FitConfig`, `train_one_epoch`, `evaluate`, `evaluate_metrics`, `evaluate_mc_metrics`, `kfold_cross_validate`, `KFoldConfig`
 - **Training helpers:** `build_four_param_model`, `build_mc_dropout_model`, `build_optimizer`, `mse`, `rmse`, `mean_relative_error`
@@ -193,6 +213,7 @@ For full API reference, module documentation, and usage guides, visit: [Homepage
 3. **Dataset construction** - Use `condense_sim_root` → `add_cl_to_condensed_h5` → `build_and_write_training` to produce a single condensed HDF5 with `/sims` and `/training`.
 4. **Hyperparameter search (optional)** - Use `load_training_arrays` and `run_tune_four_param` to search over model and optimizer settings with Ray Tune.
 5. **Training and evaluation** - Use `make_dataloaders` and `fit` (or `kfold_cross_validate`) to train and evaluate the selected emulator configuration.
+6. **Artifact saving** - Use `save_artifact` to record JSON configs/results plus optional `.npz` normalizers and `.pt` model checkpoints.
 
 ---
 

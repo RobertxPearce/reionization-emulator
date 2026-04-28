@@ -2,6 +2,19 @@
 # Public API for the reionemu package.
 # -----------------------------------------------------------------------------
 
+from .artifact import (
+    create_artifact_dir,
+    dataset_summary,
+    file_fingerprint,
+    load_normalizers,
+    read_json,
+    save_artifact,
+    save_configs,
+    save_info,
+    save_model_checkpoint,
+    save_normalizers,
+    save_results,
+)
 from .data.dataloaders import (
     DataLoaderConfig,
     load_training_arrays,
@@ -24,7 +37,12 @@ from .training.builders import (
     build_optimizer,
 )
 from .training.kfold_cv import KFoldConfig, kfold_cross_validate
-from .training.metrics import mean_relative_error, mse, rmse
+from .training.metrics import (
+    mean_relative_error,
+    mse,
+    physical_mean_relative_error,
+    rmse,
+)
 from .training.train_loop import (
     FitConfig,
     evaluate,
@@ -71,6 +89,18 @@ __all__ = [
     "load_training_arrays",
     "DataLoaderConfig",
     "Normalizer",
+    # artifact
+    "create_artifact_dir",
+    "dataset_summary",
+    "file_fingerprint",
+    "load_normalizers",
+    "read_json",
+    "save_artifact",
+    "save_configs",
+    "save_info",
+    "save_model_checkpoint",
+    "save_normalizers",
+    "save_results",
     # models
     "FourParamEmulator",
     "MCDropoutEmulator",
@@ -85,6 +115,7 @@ __all__ = [
     "mse",
     "rmse",
     "mean_relative_error",
+    "physical_mean_relative_error",
     # builders
     "build_four_param_model",
     "build_mc_dropout_model",

@@ -4,9 +4,9 @@
 
 The package follows a natural workflow from raw simulation output to trained emulator. Each stage prepares data for the next one, so most users will move through the API in roughly the same order.
 
-You typically begin by condensing simulation outputs into a single HDF5 file, then compute angular power spectra, build training arrays, prepare data loaders, instantiate a model, and train or tune it. This page gives a high-level map of those stages and highlights the main entry points in each one.
+You typically begin by condensing simulation outputs into a single HDF5 file, then compute angular power spectra, build training arrays, prepare data loaders, instantiate a model, train or tune it, and save an experiment artifact for reproducibility. This page gives a high-level map of those stages and highlights the main entry points in each one.
 
-Condense Simulation Output → Compute Power Spectra → Build Training Data → Tune Hyperparameters → Train Model → Evaluate Model
+Condense Simulation Output → Compute Power Spectra → Build Training Data → Tune Hyperparameters → Train Model → Evaluate Model → Save Artifact
 
 Below is a guide to the API in the same order it is usually used in the pipeline.
 
@@ -66,6 +66,14 @@ Main entry points in this layer include `default_param_space` for a starting sea
 
 For deeper documentation on this stage, see [Hyperparameter Tuning](api/hyperparameter-tuning.md).
 
+## Experiment artifacts
+
+The artifact layer records experiment metadata without modifying the condensed HDF5 dataset. It writes JSON files for run identity, configuration choices, and results, plus optional sidecar files for objects that are better saved in binary formats.
+
+Use this layer after building a dataset, training a model, or running a validation workflow. The main entry point is `save_artifact`, which creates a run directory containing `info.json`, `configs.json`, `results.json`, and optional files such as `normalizers.npz` and `model.pt`. Lower-level helpers such as `save_configs`, `save_results`, `save_info`, `save_normalizers`, `load_normalizers`, `save_model_checkpoint`, `dataset_summary`, `file_fingerprint`, and `read_json` are available when you want to write or read individual pieces.
+
+For deeper documentation on this stage, see [Artifacts](api/artifacts.md).
+
 ## Typical top-level imports
 
 Most users can stay at the package top level for the stable public API:
@@ -78,6 +86,7 @@ model = reionemu.FourParamEmulator()
 # model = reionemu.MCDropoutEmulator(dropout_rate=0.1)
 loaders, normalizers, ell = reionemu.make_dataloaders(h5_path)
 history = reionemu.fit(...)
+artifact_dir = reionemu.save_artifact("baseline_four_param", "artifacts", history=history)
 ```
 
-If you are exploring internals, experimental variants, or implementation details, you may also work directly with submodules such as `reionemu.simio`, `reionemu.training`, `reionemu.tuning`, or `reionemu.models.experimental`.
+If you are exploring internals, experimental variants, or implementation details, you may also work directly with submodules such as `reionemu.simio`, `reionemu.training`, `reionemu.tuning`, `reionemu.artifact`, or `reionemu.models.experimental`.
