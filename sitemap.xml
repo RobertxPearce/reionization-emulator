@@ -2,34 +2,38 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://robertxpearce.github.io/reionization-emulator/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://robertxpearce.github.io/reionization-emulator/api-overview/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://robertxpearce.github.io/reionization-emulator/getting-started/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
+    </url>
+    <url>
+         <loc>https://robertxpearce.github.io/reionization-emulator/api/artifacts/</loc>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://robertxpearce.github.io/reionization-emulator/api/data-loading/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://robertxpearce.github.io/reionization-emulator/api/hyperparameter-tuning/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://robertxpearce.github.io/reionization-emulator/api/models/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://robertxpearce.github.io/reionization-emulator/api/simulation-io/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
     <url>
          <loc>https://robertxpearce.github.io/reionization-emulator/api/training/</loc>
-         <lastmod>2026-04-24</lastmod>
+         <lastmod>2026-04-28</lastmod>
     </url>
 </urlset>

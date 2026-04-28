@@ -541,6 +541,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#experiment-artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Experiment artifacts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#typical-top-level-imports" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -751,6 +762,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/artifacts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifacts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -781,8 +820,8 @@
 <h1 id="api-overview">API Overview<a class="headerlink" href="#api-overview" title="Permanent link">&para;</a></h1>
 <h2 id="workflow">Workflow<a class="headerlink" href="#workflow" title="Permanent link">&para;</a></h2>
 <p>The package follows a natural workflow from raw simulation output to trained emulator. Each stage prepares data for the next one, so most users will move through the API in roughly the same order.</p>
-<p>You typically begin by condensing simulation outputs into a single HDF5 file, then compute angular power spectra, build training arrays, prepare data loaders, instantiate a model, and train or tune it. This page gives a high-level map of those stages and highlights the main entry points in each one.</p>
-<p>Condense Simulation Output → Compute Power Spectra → Build Training Data → Tune Hyperparameters → Train Model → Evaluate Model</p>
+<p>You typically begin by condensing simulation outputs into a single HDF5 file, then compute angular power spectra, build training arrays, prepare data loaders, instantiate a model, train or tune it, and save an experiment artifact for reproducibility. This page gives a high-level map of those stages and highlights the main entry points in each one.</p>
+<p>Condense Simulation Output → Compute Power Spectra → Build Training Data → Tune Hyperparameters → Train Model → Evaluate Model → Save Artifact</p>
 <p>Below is a guide to the API in the same order it is usually used in the pipeline.</p>
 <h2 id="how-to-read-this-page">How to read this page<a class="headerlink" href="#how-to-read-this-page" title="Permanent link">&para;</a></h2>
 <p>This page is a map of the package rather than a full reference. Use it to understand which layer of the API you need, then move to the dedicated API guide for function-by-function details, parameters, and examples.</p>
@@ -812,6 +851,10 @@
 <p>You should use this layer after you already have prepared train and validation arrays. Tuning is optional for many workflows, especially when you are just validating the pipeline or training a baseline model, but it becomes useful when you want to systematically compare configurations and select a stronger final deterministic setup. <code>MCDropoutEmulator</code> is trained through the regular training API; the current Ray Tune helper is scoped to <code>FourParamEmulator</code>.</p>
 <p>Main entry points in this layer include <code>default_param_space</code> for a starting search space, <code>train_four_param_tune</code> for the per-trial training logic, and <code>run_tune_four_param</code> for launching and managing a full tuning run.</p>
 <p>For deeper documentation on this stage, see <a href="../api/hyperparameter-tuning/">Hyperparameter Tuning</a>.</p>
+<h2 id="experiment-artifacts">Experiment artifacts<a class="headerlink" href="#experiment-artifacts" title="Permanent link">&para;</a></h2>
+<p>The artifact layer records experiment metadata without modifying the condensed HDF5 dataset. It writes JSON files for run identity, configuration choices, and results, plus optional sidecar files for objects that are better saved in binary formats.</p>
+<p>Use this layer after building a dataset, training a model, or running a validation workflow. The main entry point is <code>save_artifact</code>, which creates a run directory containing <code>info.json</code>, <code>configs.json</code>, <code>results.json</code>, and optional files such as <code>normalizers.npz</code> and <code>model.pt</code>. Lower-level helpers such as <code>save_configs</code>, <code>save_results</code>, <code>save_info</code>, <code>save_normalizers</code>, <code>load_normalizers</code>, <code>save_model_checkpoint</code>, <code>dataset_summary</code>, <code>file_fingerprint</code>, and <code>read_json</code> are available when you want to write or read individual pieces.</p>
+<p>For deeper documentation on this stage, see <a href="../api/artifacts/">Artifacts</a>.</p>
 <h2 id="typical-top-level-imports">Typical top-level imports<a class="headerlink" href="#typical-top-level-imports" title="Permanent link">&para;</a></h2>
 <p>Most users can stay at the package top level for the stable public API:</p>
 <pre><code class="language-python">import reionemu
@@ -821,8 +864,9 @@ model = reionemu.FourParamEmulator()
 # model = reionemu.MCDropoutEmulator(dropout_rate=0.1)
 loaders, normalizers, ell = reionemu.make_dataloaders(h5_path)
 history = reionemu.fit(...)
+artifact_dir = reionemu.save_artifact(&quot;baseline_four_param&quot;, &quot;artifacts&quot;, history=history)
 </code></pre>
-<p>If you are exploring internals, experimental variants, or implementation details, you may also work directly with submodules such as <code>reionemu.simio</code>, <code>reionemu.training</code>, <code>reionemu.tuning</code>, or <code>reionemu.models.experimental</code>.</p>
+<p>If you are exploring internals, experimental variants, or implementation details, you may also work directly with submodules such as <code>reionemu.simio</code>, <code>reionemu.training</code>, <code>reionemu.tuning</code>, <code>reionemu.artifact</code>, or <code>reionemu.models.experimental</code>.</p>
 
 
 

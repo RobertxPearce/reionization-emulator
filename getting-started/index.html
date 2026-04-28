@@ -707,6 +707,34 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/artifacts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Artifacts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -791,8 +819,23 @@ history = reionemu.fit(
 
 # Validation loss per epoch
 print(history[&quot;val_loss&quot;])
+
+artifact_dir = reionemu.save_artifact(
+    &quot;baseline_four_param&quot;,
+    Path(&quot;artifacts&quot;),
+    dataset_path=h5_path,
+    dataloader_config=reionemu.DataLoaderConfig(batch_size=32, seed=42),
+    fit_config=reionemu.FitConfig(epochs=10, device=&quot;cpu&quot;),
+    model_config={&quot;class_name&quot;: &quot;FourParamEmulator&quot;},
+    optimizer_config={&quot;name&quot;: &quot;Adam&quot;, &quot;lr&quot;: 1e-3},
+    history=history,
+    normalizers=normalizers,
+    checkpoint=model.state_dict(),
+)
+
+print(artifact_dir)
 </code></pre>
-<p>If this runs successfully, you should see a validation-loss history printed at the end of the script.</p>
+<p>If this runs successfully, you should see a validation-loss history printed at the end of the script and an <code>artifacts/baseline_four_param/</code> directory with <code>info.json</code>, <code>configs.json</code>, <code>results.json</code>, and optional binary sidecars.</p>
 <p>If you want a dropout-based emulator that can be evaluated with Monte Carlo dropout, swap in <code>MCDropoutEmulator</code> and use the MC evaluation path:</p>
 <pre><code class="language-python">model = reionemu.MCDropoutEmulator(dropout_rate=0.2)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
@@ -815,6 +858,7 @@ print(history[&quot;val_mean_predictive_std&quot;])
 <li>Make sure the input HDF5 file already contains a <code>/training</code> group before calling <code>make_dataloaders</code>.</li>
 <li>Use the Simulation I/O pipeline first if you only have raw simulation outputs.</li>
 <li>Confirm that your Python environment includes the package dependencies before running training code.</li>
+<li>Save normalizers and model weights as artifact sidecars rather than putting them directly into JSON.</li>
 </ul>
 
 
