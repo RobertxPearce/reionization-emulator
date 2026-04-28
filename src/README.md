@@ -1,6 +1,6 @@
 # Emulator Library (`reionemu`)
 
-Core Python package for the reionization emulator: condensing simulation outputs, computing kSZ power spectra, building ML-ready training arrays, and training networks.
+Core Python package for the reionization emulator: condensing simulation outputs, computing kSZ power spectra, building ML-ready training arrays, training networks, and saving reproducible experiment artifacts.
 
 ---
 
@@ -27,6 +27,18 @@ reionemu.make_dataloaders(...)
 reionemu.load_training_arrays(...)
 reionemu.DataLoaderConfig
 reionemu.Normalizer
+
+# Experiment artifacts
+reionemu.save_artifact(...)
+reionemu.save_configs(...)
+reionemu.save_results(...)
+reionemu.save_info(...)
+reionemu.save_normalizers(...)
+reionemu.load_normalizers(...)
+reionemu.save_model_checkpoint(...)
+reionemu.dataset_summary(...)
+reionemu.file_fingerprint(...)
+reionemu.read_json(...)
 
 # Models (baseline + experimental)
 reionemu.FourParamEmulator
@@ -122,6 +134,25 @@ Simulation I/O and preprocessing.
   - `transform_standardizer()` and `inverse_transform_standardizer()` apply/undo scaling
 - **dataloaders.py** — `load_training_arrays(h5_path)`, `make_dataloaders(h5_path, split=..., config=DataLoaderConfig())`. Validates X, Y, ell (shapes and finite values) before building loaders.
 
+### artifact/
+
+- **experiment_artifact_system.py** — Save lightweight experiment records without writing metadata into the condensed HDF5 file.
+  - `save_artifact(...)` creates one run directory and writes `info.json`, `configs.json`, `results.json`, plus optional sidecars.
+  - `save_configs(...)`, `save_results(...)`, and `save_info(...)` write individual JSON files.
+  - `save_normalizers(...)` and `load_normalizers(...)` store `Normalizer` objects in `normalizers.npz`.
+  - `save_model_checkpoint(...)` stores PyTorch checkpoints in `model.pt`.
+  - `dataset_summary(...)` and `file_fingerprint(...)` record which HDF5 dataset was used.
+
+    ```
+    artifacts/
+        baseline_four_param/
+            info.json
+            configs.json
+            results.json
+            normalizers.npz
+            model.pt
+    ```
+
 ### models/
 
 - **four_param_emulator.py** — `FourParamEmulator`: 4 → 20 → 20 → 5 (ReLU), 5 spectrum bins.
@@ -149,3 +180,4 @@ Simulation I/O and preprocessing.
 2. Compute spectra and write `/cl`: `add_cl_to_condensed_h5(...)`
 3. Build and write `/training`: `build_and_write_training(...)`
 4. Create loaders and train: `make_dataloaders(...)`, `run_tune_four_param`, then `fit(...)` or `kfold_cross_validate(...)`
+5. Save experiment record: `save_artifact(...)`

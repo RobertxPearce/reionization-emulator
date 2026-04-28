@@ -4,7 +4,12 @@
 
 from .builders import build_four_param_model, build_mc_dropout_model, build_optimizer
 from .kfold_cv import KFoldConfig, kfold_cross_validate
-from .metrics import mean_relative_error, mse, rmse
+from .metrics import (
+    mean_relative_error,
+    mse,
+    physical_mean_relative_error,
+    rmse,
+)
 from .train_loop import (
     FitConfig,
     evaluate,
@@ -26,6 +31,7 @@ __all__ = [
     "mse",
     "rmse",
     "mean_relative_error",
+    "physical_mean_relative_error",
     # builders
     "build_four_param_model",
     "build_mc_dropout_model",

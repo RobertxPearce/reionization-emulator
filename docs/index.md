@@ -32,6 +32,10 @@ hide:
     <h3>Search and tuning</h3>
     <p>Run Ray Tune experiments to explore architecture and optimizer choices for the deterministic four-parameter emulator.</p>
   </div>
+  <div class="feature-card">
+    <h3>Experiment artifacts</h3>
+    <p>Save JSON manifests, configs, results, normalizers, and model checkpoints for reproducible emulator runs.</p>
+  </div>
 </div>
 
 ## Start here

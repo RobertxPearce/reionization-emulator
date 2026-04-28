@@ -77,9 +77,24 @@ history = reionemu.fit(
 
 # Validation loss per epoch
 print(history["val_loss"])
+
+artifact_dir = reionemu.save_artifact(
+    "baseline_four_param",
+    Path("artifacts"),
+    dataset_path=h5_path,
+    dataloader_config=reionemu.DataLoaderConfig(batch_size=32, seed=42),
+    fit_config=reionemu.FitConfig(epochs=10, device="cpu"),
+    model_config={"class_name": "FourParamEmulator"},
+    optimizer_config={"name": "Adam", "lr": 1e-3},
+    history=history,
+    normalizers=normalizers,
+    checkpoint=model.state_dict(),
+)
+
+print(artifact_dir)
 ```
 
-If this runs successfully, you should see a validation-loss history printed at the end of the script.
+If this runs successfully, you should see a validation-loss history printed at the end of the script and an `artifacts/baseline_four_param/` directory with `info.json`, `configs.json`, `results.json`, and optional binary sidecars.
 
 If you want a dropout-based emulator that can be evaluated with Monte Carlo dropout, swap in `MCDropoutEmulator` and use the MC evaluation path:
 
@@ -106,3 +121,4 @@ print(history["val_mean_predictive_std"])
 - Make sure the input HDF5 file already contains a `/training` group before calling `make_dataloaders`.
 - Use the Simulation I/O pipeline first if you only have raw simulation outputs.
 - Confirm that your Python environment includes the package dependencies before running training code.
+- Save normalizers and model weights as artifact sidecars rather than putting them directly into JSON.
