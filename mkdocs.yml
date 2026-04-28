@@ -41,6 +41,7 @@ nav:
       - Models: api/models.md
       - Training: api/training.md
       - Hyperparameter Tuning: api/hyperparameter-tuning.md
+      - Artifacts: api/artifacts.md
 
 markdown_extensions:
   - admonition
