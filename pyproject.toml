@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "reionemu"
-version = "0.1.0"
+version = "0.2.0"
 description = "Machine-learning emulator pipeline for the kinetic Sunyaev-Zel'dovich angular power spectrum."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -31,7 +31,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=7.0"]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+]
 dev = [
     "pytest>=7.0",
     "scipy",
@@ -40,11 +43,13 @@ dev = [
     "twine",
     "ipykernel",
     "jupyter",
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
     "ruff",
 ]
 
 [project.urls]
-Homepage = "https://github.com/RobertxPearce/reionization-emulator"
+Homepage = "https://robertxpearce.github.io/reionization-emulator/"
 Repository = "https://github.com/RobertxPearce/reionization-emulator"
 Issues = "https://github.com/RobertxPearce/reionization-emulator/issues"
 
