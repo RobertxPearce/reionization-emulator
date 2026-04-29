@@ -1,6 +1,6 @@
-# Data Directory
+# Datasets Directory
 
-This folder organizes all simulation outputs, intermediate products, and final datasets used for the emulator. (Not Tracked)
+This folder organizes all simulation outputs, intermediate products, and final datasets used for the emulator. HDF5 data files and processed outputs are not tracked by git; parameter sample files and simulation logs are tracked.
 
 ## Structure
 
