@@ -10,7 +10,7 @@ import numpy as np
 from scipy.stats import qmc
 
 # Path for .txt file containing all sampled params
-OUT = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/param_samples")
+OUT = Path(r"/Users/robertxpearce/Desktop/reionization-emulator/datasets/param_samples")
 # Name of file (version corresponding to the batch run)
 FILE_NAME = "params_test.txt"
 

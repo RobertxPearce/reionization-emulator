@@ -26,13 +26,6 @@ python -m pip install -e .
 
 **Requirements:** Python 3.10+, NumPy, HDF5, PyTorch, and Ray Tune.
 
-To run the test suite:
-
-```bash
-pip install -e ".[test]"   # or: pip install . pytest
-pytest tests/ -v
-```
-
 ---
 
 ## Quick start
@@ -176,14 +169,14 @@ The kinetic Sunyaev-Zel'dovich (kSZ) effect arises from the scattering of CMB ph
 | **`src/reionemu/`**      | Core library (pip-installable package)                                                 |
 | `src/reionemu/simio/`    | Simulation I/O, power spectrum computation, training-array building                    |
 | `src/reionemu/data/`     | Dataloaders, normalization                                                             |
-| `src/reionemu/artifact/` | JSON experiment manifests, config/results saving, normalizer and checkpoint sidecars    |
+| `src/reionemu/artifact/` | JSON experiment manifests, config/results saving, normalizer and checkpoint sidecars   |
 | `src/reionemu/models/`   | Baseline and experimental emulator architectures                                       |
 | `src/reionemu/training/` | Training loop, K-fold cross-validation, metrics, and model builders                    |
 | `src/reionemu/tuning/`   | Ray Tune integration for hyperparameter search                                         |
 | **`scripts/`**           | Dataset builder, HPC runners, sampling (environment-specific)                          |
 | **`notebooks/`**         | Analysis and training examples                                                         |
-| **`docs/`**              | Package example notebook                                                               |
-| `data/`                  | Raw and processed data (not tracked)                                                   |
+| **`docs/`**              | Documentation source code                                                              |
+| `datasets/`              | Raw and processed datasets (not tracked)                                               |
 | `results/`               | Visualizations for simulation checks, parameter-space validation, and model evaluation |
 
 The **core API** is in `src/reionemu/`. Scripts under `scripts/hpc/` and `scripts/sampling/` are for cluster and sampling workflows and may use machine-specific paths; the library itself is portable.
@@ -196,10 +189,10 @@ Import from the top-level package after `pip install reionemu`:
 
 - **Simulation I/O:** `condense_sim_root`, `CondenseConfig`, `add_cl_to_condensed_h5`, `ClConfig`, `build_and_write_training`, `build_training_arrays`, `BuildXYConfig`, `BuildStats`, `CondenseStats`
 - **Data:** `make_dataloaders`, `load_training_arrays`, `DataLoaderConfig`, `Normalizer`
-- **Artifacts:** `save_artifact`, `save_configs`, `save_results`, `save_info`, `save_normalizers`, `load_normalizers`, `save_model_checkpoint`, `dataset_summary`, `file_fingerprint`, `read_json`
+- **Artifacts:** `create_artifact_dir`, `save_artifact`, `save_configs`, `save_results`, `save_info`, `save_normalizers`, `load_normalizers`, `save_model_checkpoint`, `dataset_summary`, `file_fingerprint`, `read_json`
 - **Models:** `FourParamEmulator`, `MCDropoutEmulator` (experimental variants live in `reionemu.models.experimental`)
 - **Training:** `fit`, `FitConfig`, `train_one_epoch`, `evaluate`, `evaluate_metrics`, `evaluate_mc_metrics`, `kfold_cross_validate`, `KFoldConfig`
-- **Training helpers:** `build_four_param_model`, `build_mc_dropout_model`, `build_optimizer`, `mse`, `rmse`, `mean_relative_error`
+- **Training helpers:** `build_four_param_model`, `build_mc_dropout_model`, `build_optimizer`, `mse`, `rmse`, `mean_relative_error`, `physical_mean_relative_error`
 - **Tuning:** `train_four_param_tune`, `default_param_space`, `run_tune_four_param`
 
 For full API reference, module documentation, and usage guides, visit: [Homepage](https://robertxpearce.github.io/reionization-emulator/)

@@ -20,13 +20,6 @@ python -m pip install -e .
 
 Requires Python 3.10+. Package dependencies include NumPy, `h5py`, PyTorch, and Ray Tune.
 
-To run the test suite:
-
-```bash
-python -m pip install -e ".[test]"
-pytest tests/ -v
-```
-
 ## Verify installation
 
 To confirm the package imports correctly:

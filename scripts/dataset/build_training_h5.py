@@ -31,10 +31,10 @@ def _progress_print(step: str):
 
 def main():
     raw_sim_root = Path(
-        r"/Users/robertxpearce/Desktop/reionization-emulator/data/raw/sims_v6"
+        r"/Users/robertxpearce/Desktop/reionization-emulator/datasets/raw/sims_v6"
     )
     condensed_h5 = Path(
-        r"/Users/robertxpearce/Desktop/reionization-emulator/data/processed/TEST.h5"
+        r"/Users/robertxpearce/Desktop/reionization-emulator/datasets/processed/TEST.h5"
     )
 
     print("1) Condensing raw simulation outputs")

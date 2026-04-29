@@ -10,7 +10,9 @@ from pathlib import Path
 from reionemu import load_training_arrays, run_tune_four_param
 
 X, Y, ell = load_training_arrays(
-    Path(r"/Users/robertxpearce/Desktop/reionization-emulator/data/processed/TEST.h5")
+    Path(
+        r"/Users/robertxpearce/Desktop/reionization-emulator/datasets/processed/TEST.h5"
+    )
 )
 
 n = len(X)

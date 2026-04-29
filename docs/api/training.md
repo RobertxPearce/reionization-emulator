@@ -313,6 +313,18 @@ def mean_relative_error(
 
 Returns the mean absolute relative error, using `target.abs() + eps` in the denominator to avoid division by zero.
 
+### physical_mean_relative_error
+
+```python
+def physical_mean_relative_error(
+    pred: torch.Tensor,
+    target: torch.Tensor,
+    eps: float = 1e-8,
+) -> torch.Tensor:
+```
+
+Returns the mean absolute relative error in physical (exponentiated) space. Use this when `pred` and `target` are log-transformed values and you want the error relative to the original scale. Both tensors are exponentiated with `torch.exp` before the relative error is computed.
+
 ## Model And Optimizer Builders
 
 The builder helpers create models and optimizers from dictionaries. These are used by the Ray Tune integration, but they are also useful when you want a config-driven training script.

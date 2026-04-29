@@ -10,18 +10,20 @@
 # Robert Pearce
 # -----------------------------------------------------------------------------
 
-import numpy as np
 from dataclasses import dataclass
+
+import numpy as np
 
 
 @dataclass
 class Normalizer:
     """
     Container for mean and standard deviation.
-    
+
     mean: Feature-wise mean
     std: Feature-wise standard deviation
     """
+
     mean: np.ndarray
     std: np.ndarray
 
@@ -29,7 +31,7 @@ class Normalizer:
 def fit_standardizer(X: np.ndarray) -> Normalizer:
     """
     Compute feature-wise mean and standard deviation.
-    
+
     X: N-dimensional array
     """
     mean = X.mean(axis=0)
@@ -42,7 +44,7 @@ def fit_standardizer(X: np.ndarray) -> Normalizer:
 def transform_standardizer(X: np.ndarray, norm: Normalizer) -> np.ndarray:
     """
     Apply standardization using provided Normalizer.
-    
+
     returns: Standardized array of same shape as X
     """
     return (X - norm.mean) / norm.std
@@ -51,11 +53,12 @@ def transform_standardizer(X: np.ndarray, norm: Normalizer) -> np.ndarray:
 def inverse_transform_standardizer(X: np.ndarray, norm: Normalizer) -> np.ndarray:
     """
     Reverse standardization using provided Normalizer.
-    
+
     returns: Original array of same shape as X
     """
     return (X * norm.std) + norm.mean
 
-#-----------------------------
+
+# -----------------------------
 #         END OF FILE
-#-----------------------------
+# -----------------------------

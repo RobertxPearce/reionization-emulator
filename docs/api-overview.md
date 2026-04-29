@@ -52,7 +52,7 @@ The training layer contains the utilities used to fit models, evaluate performan
 
 You should use this layer after you have dataloaders and a model instance ready. For most users, the default path is to configure training with `FitConfig`, call `fit`, and use `evaluate` or `evaluate_metrics` to inspect results. For `MCDropoutEmulator`, use `evaluate_mc_metrics` or `fit(..., evaluation="evaluate_mc_metrics")` when you want validation metrics based on stochastic dropout samples. Lower-level helpers such as `train_one_epoch` are useful when you need more control over the loop.
 
-Main entry points in this layer include `FitConfig`, `fit`, `evaluate`, `evaluate_metrics`, `evaluate_mc_metrics`, `train_one_epoch`, `KFoldConfig`, `kfold_cross_validate`, and the basic regression metrics `mse`, `rmse`, and `mean_relative_error`.
+Main entry points in this layer include `FitConfig`, `fit`, `evaluate`, `evaluate_metrics`, `evaluate_mc_metrics`, `train_one_epoch`, `KFoldConfig`, `kfold_cross_validate`, and the regression metrics `mse`, `rmse`, `mean_relative_error`, and `physical_mean_relative_error`.
 
 For deeper documentation on this stage, see [Training](api/training.md).
 

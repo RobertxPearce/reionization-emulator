@@ -3,9 +3,9 @@
 # -----------------------------------------------------------------------------
 
 from .dataloaders import (
+    DataLoaderConfig,
     load_training_arrays,
     make_dataloaders,
-    DataLoaderConfig,
 )
 from .normalization import Normalizer
 

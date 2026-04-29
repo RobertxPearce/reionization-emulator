@@ -29,6 +29,7 @@ reionemu.DataLoaderConfig
 reionemu.Normalizer
 
 # Experiment artifacts
+reionemu.create_artifact_dir(...)
 reionemu.save_artifact(...)
 reionemu.save_configs(...)
 reionemu.save_results(...)
@@ -60,6 +61,7 @@ reionemu.build_optimizer(...)
 reionemu.mse(...)
 reionemu.rmse(...)
 reionemu.mean_relative_error(...)
+reionemu.physical_mean_relative_error(...)
 reionemu.train_four_param_tune(...)
 reionemu.default_param_space(...)
 reionemu.run_tune_four_param(...)
@@ -166,7 +168,7 @@ Simulation I/O and preprocessing.
   - `fit()` trains for many epochs, prints losses each epoch, supports early stopping and restores best weights when used
 - **kfold_cv.py** — `KFoldConfig`, `kfold_cross_validate(h5_path, model_builder=..., ...)`.
 - **builders.py** — `build_four_param_model(config)`, `build_mc_dropout_model(config)`, `build_optimizer(model, config)`.
-- **metrics.py** — `mse(pred, target)`, `rmse(pred, target)`, `mean_relative_error(pred, target)`.
+- **metrics.py** — `mse(pred, target)`, `rmse(pred, target)`, `mean_relative_error(pred, target)`, `physical_mean_relative_error(pred, target)`.
 
 ### tuning/
 
