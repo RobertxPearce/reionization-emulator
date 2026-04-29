@@ -1,9 +1,9 @@
-# Ignore large data sets
-data/
-data/raw/*.hdf5
-data/tau_tests/*.hdf5
-data/raw/**/*.hdf5
-data/tau_tests/**/*.hdf5
+# Ignore large data files (HDF5) and processed/results directories
+datasets/processed/
+datasets/raw/**/*.h5
+datasets/raw/**/*.hdf5
+datasets/tau_tests/**/*.h5
+datasets/tau_tests/**/*.hdf5
 results/
 checkpoints/
 ray_results/
@@ -11,9 +11,8 @@ ray_results/
 # Dist files
 dist/
 
-# Keep directories
-!data/raw/
-!data/tau_tests/
+# MKDocs site
+site/
 
 # Simulation files
 planck_2018_transfer_z000.dat
