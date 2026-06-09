@@ -166,6 +166,11 @@ def kfold_cross_validate(
             shuffle=False,
         )
 
+        fold_seed = kfold_config.seed + fold_id
+        torch.manual_seed(fold_seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(fold_seed)
+
         # Fresh model + optimizer per fold
         model = model_builder()
         optimizer = optimizer_builder(model)

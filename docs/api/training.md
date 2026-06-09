@@ -86,12 +86,14 @@ class FitConfig:
     device: str = "cpu"
     early_stopping_patience: Optional[int] = None
     gradient_clipping: Optional[float] = None
+    seed: Optional[int] = None
 ```
 
 - **epochs**: Maximum number of training epochs.
 - **device**: Torch device string, such as `"cpu"`, `"cuda"`, or `"mps"`.
 - **early_stopping_patience**: If set, stop after this many consecutive epochs without validation-loss improvement.
 - **gradient_clipping**: If set, clip gradient norm to this value during training.
+- **seed**: If set, calls `torch.manual_seed()` (and `torch.cuda.manual_seed_all()` when CUDA is available) before training begins. Use this to make weight updates reproducible across runs. Defaults to `None` (no seed set by `fit`).
 
 ### Early Stopping Behavior
 
@@ -124,7 +126,7 @@ def fit(
 | val_loader | `DataLoader` | *Required* | Validation batches of `(X_batch, Y_batch)` |
 | optimizer | `torch.optim.Optimizer` | *Required* | Optimizer used for parameter updates |
 | loss_fn | `Callable` | *Required* | Loss function, commonly `torch.nn.MSELoss()` |
-| config | `FitConfig` | *Required* | Epoch, device, early stopping, and gradient clipping settings |
+| config | `FitConfig` | *Required* | Epoch, device, early stopping, gradient clipping, and optional training seed settings |
 | metrics | `Dict[str, Callable]` | `None` | Optional validation metrics computed each epoch |
 | evaluation | `str` | `"evaluate_metrics"` | Evaluation path: `"evaluate_metrics"` or `"evaluate_mc_metrics"` |
 | n_mc_samples | `int` | `100` | Number of stochastic passes for MC-dropout evaluation |
@@ -472,4 +474,5 @@ print(result["std_best_val"])
 - **Device errors**: Make sure `FitConfig.device` is available on your machine. Use `"cpu"` for the most portable option.
 - **Validation loss is unstable**: Try a smaller learning rate, enable gradient clipping, or use early stopping.
 - **Cross-validation reuses weights**: Make sure `model_builder` returns a new model instance every time it is called.
+- **Cross-validation and `FitConfig.seed` interaction**: `kfold_cross_validate` sets its own per-fold seed (`kfold_config.seed + fold_id`) before calling `model_builder` and `optimizer_builder`. If `fit_config.seed` is also set, `fit` will overwrite the per-fold seed at the start of training. For most workflows, leave `fit_config.seed` as `None` (the default) and let the k-fold runner handle per-fold seeding.
 - **MC-dropout uncertainty is missing**: Use `MCDropoutEmulator` with `evaluation="evaluate_mc_metrics"`.

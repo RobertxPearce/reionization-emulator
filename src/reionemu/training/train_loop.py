@@ -29,12 +29,14 @@ class FitConfig:
     early_stopping_patience: Optional stop if val loss doesn't improve for
     this many epochs
     gradient_clipping: Optional max norm for gradient clipping (default None)
+    seed: Optional random seed for PyTorch reproducibility
     """
 
     epochs: int = 200
     device: str = "cpu"
     early_stopping_patience: Optional[int] = None
     gradient_clipping: Optional[float] = None
+    seed: Optional[int] = None
 
 
 def train_one_epoch(
@@ -267,6 +269,11 @@ def fit(
 
     return: Training and validation history
     """
+    if config.seed is not None:
+        torch.manual_seed(config.seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(config.seed)
+
     # Set device to configuration spec
     device = torch.device(config.device)
 
