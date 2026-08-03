@@ -44,6 +44,8 @@ reionemu.read_json(...)
 # Models (baseline + experimental)
 reionemu.FourParamEmulator
 reionemu.MCDropoutEmulator
+reionemu.predict_mc(...)
+reionemu.enable_dropout_only(...)
 reionemu.models.experimental.POCEmulatorThreeParams
 
 # Training loops, metrics, builders, and tuning
@@ -159,6 +161,8 @@ Simulation I/O and preprocessing.
 
 - **four_param_emulator.py** — `FourParamEmulator`: 4 → 20 → 20 → 5 (ReLU), 5 spectrum bins.
 - **mc_dropout_emulator.py** — `MCDropoutEmulator`: 4 → 20 → 20 → 5 (ReLU), 5 spectrum bins.
+  - `predict_mc(params, model, X_mean, X_std, ..., n_mc_samples=100, device="cpu")` runs repeated stochastic forward passes and returns `(pred_mean, pred_std, samples_dl, samples_log)` in physical units. The final `exp` assumes `BuildXYConfig(y_transform="ln")`; other transforms give silently wrong physical values.
+  - `enable_dropout_only(model)` re-enables dropout layers while the rest of the model stays in eval mode. One mask is drawn per pass and shared across the batch, so the effective sample size is `n_mc_samples`.
 - **experimental/** — POC variants: `POCEmulatorFourParamsV1/V2/V3`, `POCEmulatorThreeParams`. Import from `reionemu.models.experimental`.
 
 ### training/

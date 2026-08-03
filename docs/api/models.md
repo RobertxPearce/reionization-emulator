@@ -7,6 +7,7 @@ The *models* module contains the PyTorch emulator architectures used to map reio
 - Provides stable neural network classes for four-parameter emulation
 - Supports configurable hidden width, hidden depth, and activation function
 - Provides a dropout-based variant for uncertainty-oriented experiments
+- Provides `predict_mc` for Monte Carlo dropout prediction in physical units
 - Separates stable public models from proof-of-concept experimental variants
 
 This module specifically handles this step in the workflow: Instantiate Model.
@@ -176,6 +177,112 @@ pred = model(xb)
 print(pred.shape)
 ```
 
+## MC-Dropout Prediction
+
+A plain forward pass through a trained `MCDropoutEmulator` is deterministic, because `model.eval()` disables dropout. `predict_mc` performs the full Monte Carlo dropout prediction instead: it re-enables dropout, runs repeated stochastic forward passes, undoes the target normalization, and returns both the predictive mean and its spread in physical units.
+
+Use this when you need predictions and uncertainties outside the training loop, for example when evaluating a saved model on a held-out set or when using the emulator as a likelihood inside parameter inference. Inside the training loop, prefer `evaluate_mc_metrics(...)` or `fit(..., evaluation="evaluate_mc_metrics")`.
+
+### predict_mc
+
+```python
+def predict_mc(
+    params,
+    model: torch.nn.Module,
+    X_mean=None,
+    X_std=None,
+    Y_mean=None,
+    Y_std=None,
+    *,
+    normalize_X: bool = True,
+    normalize_Y: bool = False,
+    n_mc_samples: int = 100,
+    device: str = "cpu",
+)
+```
+
+| Parameter | Type | Default | Description |
+|:----------|:-----|:--------|:------------|
+| params | `array-like` | required | Raw parameter values with shape `(n_params,)` or `(N, n_params)` |
+| model | `torch.nn.Module` | required | Trained model containing dropout layers |
+| X_mean, X_std | `array-like` | `None` | Input normalizer statistics; required when `normalize_X` is `True` |
+| Y_mean, Y_std | `array-like` | `None` | Target normalizer statistics; required when `normalize_Y` is `True` |
+| normalize_X | `bool` | `True` | Standardize inputs before the forward passes |
+| normalize_Y | `bool` | `False` | Undo target standardization on the draws |
+| n_mc_samples | `int` | `100` | Number of stochastic forward passes |
+| device | `str` | `"cpu"` | Torch device string to run the passes on |
+
+The function returns four values:
+
+| Return value | Shape | Description |
+|:-------------|:------|:------------|
+| pred_mean | `(..., output_dim)` | Predictive mean in physical units |
+| pred_std | `(..., output_dim)` | Predictive standard deviation in physical units, `ddof=1` |
+| samples_dl | `(n_mc_samples, ..., output_dim)` | Individual draws in physical units |
+| samples_log | `(n_mc_samples, ..., output_dim)` | The same draws before exponentiating |
+
+The model is trained on `log(D_ell)`, so `predict_mc` exponentiates the draws before averaging. The mean and standard deviation are therefore computed in physical units rather than in log space, and `pred_mean` is not the exponential of the mean log prediction.
+
+!!! warning "Assumes `y_transform="ln"`"
+
+    The final exponentiation assumes the training targets were built with
+    `BuildXYConfig(y_transform="ln")`, which is the default. The other supported
+    options are `"log10"` and `"none"` (see [Simulation I/O](simulation-io.md)), and
+    with either of those `predict_mc` returns silently incorrect physical values —
+    it will not raise. In that case use the returned `samples_log` and apply the
+    matching inverse transform yourself. `physical_mean_relative_error` carries the
+    same assumption.
+
+### Choosing n_mc_samples
+
+One dropout mask is drawn per forward pass and shared across every row of `params`. Predictions for different parameter points within a single call are therefore correlated, and the effective sample size for averaging is `n_mc_samples`, not `n_mc_samples * len(params)`. Increasing the number of parameter points does not reduce Monte Carlo noise; only increasing `n_mc_samples` does.
+
+As a rough guide, the standard error on `pred_mean` scales as the per-bin coefficient of variation divided by the square root of `n_mc_samples`, while a stable `pred_std` requires roughly `1 + 1 / (2 * tol**2)` samples for a relative tolerance `tol`. Reporting the predictive spread usually drives the sample count higher than reporting the mean alone.
+
+### Typical Usage
+
+```python
+import numpy as np
+
+from reionemu import MCDropoutEmulator, predict_mc
+
+model = MCDropoutEmulator(dropout_rate=0.1)
+
+theta = np.array([[8.0, 0.5, 1.0, 0.45]], dtype=np.float32)
+
+pred_mean, pred_std, samples_dl, samples_log = predict_mc(
+    theta,
+    model,
+    X_mean=normalizers["X"].mean,
+    X_std=normalizers["X"].std,
+    normalize_X=True,
+    n_mc_samples=200,
+    device="cpu",
+)
+
+print(pred_mean.shape, pred_std.shape)
+print(samples_dl.shape)
+```
+
+Because dropout is stochastic, repeated calls return different values. Seed torch immediately before the call when you need a reproducible number:
+
+```python
+import torch
+
+torch.manual_seed(42)
+pred_mean, pred_std, _, _ = predict_mc(theta, model, X_mean, X_std, n_mc_samples=200)
+```
+
+### enable_dropout_only
+
+```python
+def enable_dropout_only(model: torch.nn.Module) -> None:
+```
+
+Puts every `torch.nn.Dropout` layer back into training mode while leaving the rest of the model in evaluation mode. `predict_mc` calls this internally, so you only need it directly when writing a custom MC-dropout loop.
+
+Keeping the rest of the model in evaluation mode is what makes MC dropout well defined: the stochasticity must come from dropout alone, not from other layers whose behavior differs between training and evaluation.
+
 ## Model Builders
 
 The training layer includes helper functions that build models from configuration dictionaries. These are especially useful for Ray Tune workflows, where each trial receives a different `config`.
@@ -250,4 +357,7 @@ For production workflows, prefer `FourParamEmulator` or `MCDropoutEmulator`.
 
 - **Unknown activation function**: Use one of `"relu"`, `"gelu"`, `"silu"`, `"tanh"`, or `"sigmoid"`.
 - **Shape mismatch during training**: Make sure `input_dim` matches `X.shape[1]` and `output_dim` matches `Y.shape[1]`.
-- **MC dropout gives deterministic predictions**: Use `evaluate_mc_metrics(...)` or `fit(..., evaluation="evaluate_mc_metrics")`; a plain `model.eval()` forward pass disables dropout.
+- **MC dropout gives deterministic predictions**: Use `predict_mc(...)` outside the training loop, or `evaluate_mc_metrics(...)` / `fit(..., evaluation="evaluate_mc_metrics")` inside it; a plain `model.eval()` forward pass disables dropout.
+- **`predict_mc` results change between runs**: This is expected, since dropout masks are redrawn on every call. Seed torch immediately before the call, or raise `n_mc_samples`, to reduce run-to-run variation.
+- **`predict_mc` values look wrong by orders of magnitude**: Check `BuildXYConfig.y_transform`. `predict_mc` exponentiates with `exp`, so a dataset built with `"log10"` or `"none"` produces silently incorrect physical units.
+- **`predict_mc` raises on `X_mean` or `X_std`**: These are required whenever `normalize_X` is `True`. Pass the fitted `Normalizer` statistics, or set `normalize_X=False` if your inputs are already standardized.

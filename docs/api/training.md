@@ -327,6 +327,8 @@ def physical_mean_relative_error(
 
 Returns the mean absolute relative error in physical (exponentiated) space. Use this when `pred` and `target` are log-transformed values and you want the error relative to the original scale. Both tensors are exponentiated with `torch.exp` before the relative error is computed.
 
+This assumes the targets were built with `BuildXYConfig(y_transform="ln")`, the default. With `y_transform="log10"` or `"none"` the metric is silently wrong rather than raising; use `mean_relative_error` on already-physical values instead.
+
 ## Model And Optimizer Builders
 
 The builder helpers create models and optimizers from dictionaries. These are used by the Ray Tune integration, but they are also useful when you want a config-driven training script.

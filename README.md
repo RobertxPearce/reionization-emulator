@@ -1,5 +1,13 @@
+[![CI](https://github.com/RobertxPearce/reionization-emulator/actions/workflows/ci.yml/badge.svg)](https://github.com/RobertxPearce/reionization-emulator/actions/workflows/ci.yml)
+[![Docs](https://img.shields.io/badge/docs-online-blue)](https://robertxpearce.github.io/reionization-emulator/)
+[![PyPI](https://img.shields.io/pypi/v/reionemu)](https://pypi.org/project/reionemu/)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+<!-- [![DOI](https://zenodo.org/badge/1051925247.svg)](https://zenodo.org/badge/latestdoi/1051925247) -->
+
+
 <p align="center">
-  <img src="https://raw.githubusercontent.com/RobertxPearce/reionization-emulator/main/docs/assets/reionemu-logo.png" alt="reionemu logo" width="300">
+    <img src="https://raw.githubusercontent.com/RobertxPearce/reionization-emulator/main/docs/assets/reionemu-logo.png" alt="reionemu logo" width="300">
 </p>
 
 # reionemu
@@ -104,6 +112,27 @@ history = reionemu.fit(
 print(history["val_mean_predictive_std"])
 ```
 
+Once trained, use `predict_mc` to get predictions and uncertainties in physical units. Dropout is redrawn on every call, so seed torch first when you need a reproducible number:
+
+```python
+import numpy as np
+import torch
+
+theta = np.array([[8.0, 0.5, 1.0, 0.45]], dtype=np.float32)
+
+torch.manual_seed(42)
+pred_mean, pred_std, samples_dl, samples_log = reionemu.predict_mc(
+    theta,
+    model,
+    X_mean=normalizers["X"].mean,
+    X_std=normalizers["X"].std,
+    normalize_X=True,
+    n_mc_samples=200,
+)
+
+print(pred_mean, pred_std)
+```
+
 If you want to tune the four-parameter architecture with Ray Tune before training a final model, you can work directly with the loaded arrays:
 
 ```python
@@ -190,7 +219,7 @@ Import from the top-level package after `pip install reionemu`:
 - **Simulation I/O:** `condense_sim_root`, `CondenseConfig`, `add_cl_to_condensed_h5`, `ClConfig`, `build_and_write_training`, `build_training_arrays`, `BuildXYConfig`, `BuildStats`, `CondenseStats`
 - **Data:** `make_dataloaders`, `load_training_arrays`, `DataLoaderConfig`, `Normalizer`
 - **Artifacts:** `create_artifact_dir`, `save_artifact`, `save_configs`, `save_results`, `save_info`, `save_normalizers`, `load_normalizers`, `save_model_checkpoint`, `dataset_summary`, `file_fingerprint`, `read_json`
-- **Models:** `FourParamEmulator`, `MCDropoutEmulator` (experimental variants live in `reionemu.models.experimental`)
+- **Models:** `FourParamEmulator`, `MCDropoutEmulator`, `predict_mc`, `enable_dropout_only` (experimental variants live in `reionemu.models.experimental`)
 - **Training:** `fit`, `FitConfig`, `train_one_epoch`, `evaluate`, `evaluate_metrics`, `evaluate_mc_metrics`, `kfold_cross_validate`, `KFoldConfig`
 - **Training helpers:** `build_four_param_model`, `build_mc_dropout_model`, `build_optimizer`, `mse`, `rmse`, `mean_relative_error`, `physical_mean_relative_error`
 - **Tuning:** `train_four_param_tune`, `default_param_space`, `run_tune_four_param`

@@ -5,6 +5,7 @@
 # Robert Pearce
 # -----------------------------------------------------------------------------
 
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -57,6 +58,80 @@ class MCDropoutEmulator(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.network(x)
+
+
+def enable_dropout_only(model: nn.Module) -> None:
+    """
+    Put every Dropout layer back into training mode, leaving the rest of the
+    model in eval mode.
+
+    This is what makes MC dropout an inference-time method: the stochasticity
+    must come from dropout.
+    """
+    for module in model.modules():
+        if isinstance(module, torch.nn.Dropout):
+            module.train()
+
+
+def predict_mc(
+    params,
+    model: nn.Module,
+    X_mean=None,
+    X_std=None,
+    Y_mean=None,
+    Y_std=None,
+    *,
+    normalize_X: bool = True,
+    normalize_Y: bool = False,
+    n_mc_samples: int = 100,
+    device: str = "cpu",
+):
+    """
+    Monte-Carlo dropout prediction in physical units.
+
+    Runs `n_mc_samples` stochastic forward passes with dropout active, then
+    exponentiates the draws.
+
+    That final `exp` assumes the targets were built with
+    `BuildXYConfig(y_transform="ln")`, which is the default. With
+    `y_transform="log10"` or `"none"` this function returns silently incorrect
+    physical values; exponentiate `samples_log` yourself with the matching
+    inverse instead. The same assumption is baked into
+    `physical_mean_relative_error`.
+
+    params: (n_params,) or (N, n_params) array of raw parameter values
+    model: trained MCDropoutEmulator
+    X_mean, X_std: input normalizer statistics, required when normalize_X
+    Y_mean, Y_std: target normalizer statistics, required when normalize_Y
+    device: torch device string to run the forward passes on
+
+    return: pred_mean, pred_std, samples_dl, samples_log
+        pred_mean: predictive mean in physical units
+        pred_std: predictive standard deviation in physical units (ddof=1)
+        samples_dl: (n_mc_samples, ...) draws in physical units
+        samples_log: the same draws before exponentiating
+    """
+    params = np.asarray(params, dtype=np.float32)
+
+    if normalize_X:
+        params = (params - X_mean) / X_std
+
+    xb = torch.from_numpy(params.astype(np.float32)).to(device)
+
+    model.eval()
+    enable_dropout_only(model)
+    with torch.no_grad():
+        samples = torch.stack([model(xb) for _ in range(n_mc_samples)], dim=0)
+
+    samples_log = samples.cpu().numpy()
+    if normalize_Y:
+        samples_log = samples_log * Y_std + Y_mean
+
+    samples_dl = np.exp(samples_log)
+    pred_mean = samples_dl.mean(axis=0)
+    pred_std = samples_dl.std(axis=0, ddof=1)
+
+    return pred_mean, pred_std, samples_dl, samples_log
 
 
 # -----------------------------

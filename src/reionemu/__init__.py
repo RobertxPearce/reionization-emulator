@@ -22,7 +22,11 @@ from .data.dataloaders import (
 )
 from .data.normalization import Normalizer
 from .models.four_param_emulator import FourParamEmulator
-from .models.mc_dropout_emulator import MCDropoutEmulator
+from .models.mc_dropout_emulator import (
+    MCDropoutEmulator,
+    enable_dropout_only,
+    predict_mc,
+)
 from .simio.build_xy import (
     BuildStats,
     BuildXYConfig,
@@ -104,6 +108,8 @@ __all__ = [
     # models
     "FourParamEmulator",
     "MCDropoutEmulator",
+    "enable_dropout_only",
+    "predict_mc",
     # training loops
     "train_one_epoch",
     "evaluate",

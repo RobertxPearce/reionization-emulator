@@ -40,9 +40,9 @@ For deeper documentation on this stage, see [Data Loading](api/data-loading.md).
 
 The models layer contains the emulator architectures that map reionization parameters to predicted kSZ power-spectrum targets. For most users, this is the point where the prepared training inputs meet a stable baseline model, with an optional MC-dropout variant available when predictive-spread estimates are useful.
 
-You should use this layer once your data is ready for training and you need a concrete model instance. The recommended default public model is `FourParamEmulator`; `MCDropoutEmulator` is the stable dropout-based model for Monte Carlo dropout evaluation. Experimental variants live under `reionemu.models.experimental` and are best treated as optional research extensions.
+You should use this layer once your data is ready for training and you need a concrete model instance. The recommended default public model is `FourParamEmulator`; `MCDropoutEmulator` is the stable dropout-based model for Monte Carlo dropout evaluation, paired with `predict_mc` when you need predictions and uncertainties from a trained model. Experimental variants live under `reionemu.models.experimental` and are best treated as optional research extensions.
 
-Main entry points in this layer include `FourParamEmulator` for the stable deterministic baseline, `MCDropoutEmulator` for dropout-based predictive spread, `build_four_param_model` for config-driven deterministic model construction, and `build_mc_dropout_model` for config-driven MC-dropout model construction.
+Main entry points in this layer include `FourParamEmulator` for the stable deterministic baseline, `MCDropoutEmulator` for dropout-based predictive spread, `predict_mc` for Monte Carlo dropout prediction in physical units for a trained model, `build_four_param_model` for config-driven deterministic model construction, and `build_mc_dropout_model` for config-driven MC-dropout model construction.
 
 For deeper documentation on this stage, see [Models](api/models.md).
 
