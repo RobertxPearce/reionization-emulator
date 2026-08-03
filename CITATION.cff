@@ -11,7 +11,8 @@ authors:
 abstract: "Python package for emulating the kSZ angular power spectrum from reionization simulations, with uncertainty quantification."
 repository-code: "https://github.com/RobertxPearce/reionization-emulator"
 url: "https://robertxpearce.github.io/reionization-emulator/"
-version: "0.2.0"
+version: "0.3.0"
+date-released: "2026-08-02"
 license: "MIT"
 
 keywords:
