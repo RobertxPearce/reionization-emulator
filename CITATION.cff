@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use reionemu in your research, please cite the software using the metadata below."
+title: "reionemu: Python package for emulating the kSZ angular power spectrum from reionization simulations"
+type: software
+
+authors:
+  - family-names: Pearce
+    given-names: Robert
+    orcid: "https://orcid.org/0009-0004-5143-8747"
+
+abstract: "Python package for emulating the kSZ angular power spectrum from reionization simulations, with uncertainty quantification."
+repository-code: "https://github.com/RobertxPearce/reionization-emulator"
+url: "https://robertxpearce.github.io/reionization-emulator/"
+version: "0.2.0"
+license: "MIT"
+
+keywords:
+  - reionization
+  - kSZ
+  - machine learning
+  - emulator
+  - uncertainty quantification
+  - scientific machine learning
