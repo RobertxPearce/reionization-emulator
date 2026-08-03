@@ -781,6 +781,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#mc-dropout-prediction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MC-Dropout Prediction
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MC-Dropout Prediction">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#predict_mc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        predict_mc
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#choosing-n_mc_samples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing n_mc_samples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typical-usage_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typical Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#enable_dropout_only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        enable_dropout_only
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#model-builders" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -815,7 +876,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#typical-usage_2" class="md-nav__link">
+  <a href="#typical-usage_3" class="md-nav__link">
     <span class="md-ellipsis">
       
         Typical Usage
@@ -979,6 +1040,7 @@
 <li>Provides stable neural network classes for four-parameter emulation</li>
 <li>Supports configurable hidden width, hidden depth, and activation function</li>
 <li>Provides a dropout-based variant for uncertainty-oriented experiments</li>
+<li>Provides <code>predict_mc</code> for Monte Carlo dropout prediction in physical units</li>
 <li>Separates stable public models from proof-of-concept experimental variants</li>
 </ul>
 <p>This module specifically handles this step in the workflow: Instantiate Model.</p>
@@ -1203,6 +1265,163 @@ pred = model(xb)
 
 print(pred.shape)
 </code></pre>
+<h2 id="mc-dropout-prediction">MC-Dropout Prediction<a class="headerlink" href="#mc-dropout-prediction" title="Permanent link">&para;</a></h2>
+<p>A plain forward pass through a trained <code>MCDropoutEmulator</code> is deterministic, because <code>model.eval()</code> disables dropout. <code>predict_mc</code> performs the full Monte Carlo dropout prediction instead: it re-enables dropout, runs repeated stochastic forward passes, undoes the target normalization, and returns both the predictive mean and its spread in physical units.</p>
+<p>Use this when you need predictions and uncertainties outside the training loop, for example when evaluating a saved model on a held-out set or when using the emulator as a likelihood inside parameter inference. Inside the training loop, prefer <code>evaluate_mc_metrics(...)</code> or <code>fit(..., evaluation="evaluate_mc_metrics")</code>.</p>
+<h3 id="predict_mc">predict_mc<a class="headerlink" href="#predict_mc" title="Permanent link">&para;</a></h3>
+<pre><code class="language-python">def predict_mc(
+    params,
+    model: torch.nn.Module,
+    X_mean=None,
+    X_std=None,
+    Y_mean=None,
+    Y_std=None,
+    *,
+    normalize_X: bool = True,
+    normalize_Y: bool = False,
+    n_mc_samples: int = 100,
+    device: str = &quot;cpu&quot;,
+)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">params</td>
+<td style="text-align: left;"><code>array-like</code></td>
+<td style="text-align: left;">required</td>
+<td style="text-align: left;">Raw parameter values with shape <code>(n_params,)</code> or <code>(N, n_params)</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">model</td>
+<td style="text-align: left;"><code>torch.nn.Module</code></td>
+<td style="text-align: left;">required</td>
+<td style="text-align: left;">Trained model containing dropout layers</td>
+</tr>
+<tr>
+<td style="text-align: left;">X_mean, X_std</td>
+<td style="text-align: left;"><code>array-like</code></td>
+<td style="text-align: left;"><code>None</code></td>
+<td style="text-align: left;">Input normalizer statistics; required when <code>normalize_X</code> is <code>True</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">Y_mean, Y_std</td>
+<td style="text-align: left;"><code>array-like</code></td>
+<td style="text-align: left;"><code>None</code></td>
+<td style="text-align: left;">Target normalizer statistics; required when <code>normalize_Y</code> is <code>True</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">normalize_X</td>
+<td style="text-align: left;"><code>bool</code></td>
+<td style="text-align: left;"><code>True</code></td>
+<td style="text-align: left;">Standardize inputs before the forward passes</td>
+</tr>
+<tr>
+<td style="text-align: left;">normalize_Y</td>
+<td style="text-align: left;"><code>bool</code></td>
+<td style="text-align: left;"><code>False</code></td>
+<td style="text-align: left;">Undo target standardization on the draws</td>
+</tr>
+<tr>
+<td style="text-align: left;">n_mc_samples</td>
+<td style="text-align: left;"><code>int</code></td>
+<td style="text-align: left;"><code>100</code></td>
+<td style="text-align: left;">Number of stochastic forward passes</td>
+</tr>
+<tr>
+<td style="text-align: left;">device</td>
+<td style="text-align: left;"><code>str</code></td>
+<td style="text-align: left;"><code>"cpu"</code></td>
+<td style="text-align: left;">Torch device string to run the passes on</td>
+</tr>
+</tbody>
+</table>
+<p>The function returns four values:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Return value</th>
+<th style="text-align: left;">Shape</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">pred_mean</td>
+<td style="text-align: left;"><code>(..., output_dim)</code></td>
+<td style="text-align: left;">Predictive mean in physical units</td>
+</tr>
+<tr>
+<td style="text-align: left;">pred_std</td>
+<td style="text-align: left;"><code>(..., output_dim)</code></td>
+<td style="text-align: left;">Predictive standard deviation in physical units, <code>ddof=1</code></td>
+</tr>
+<tr>
+<td style="text-align: left;">samples_dl</td>
+<td style="text-align: left;"><code>(n_mc_samples, ..., output_dim)</code></td>
+<td style="text-align: left;">Individual draws in physical units</td>
+</tr>
+<tr>
+<td style="text-align: left;">samples_log</td>
+<td style="text-align: left;"><code>(n_mc_samples, ..., output_dim)</code></td>
+<td style="text-align: left;">The same draws before exponentiating</td>
+</tr>
+</tbody>
+</table>
+<p>The model is trained on <code>log(D_ell)</code>, so <code>predict_mc</code> exponentiates the draws before averaging. The mean and standard deviation are therefore computed in physical units rather than in log space, and <code>pred_mean</code> is not the exponential of the mean log prediction.</p>
+<div class="admonition warning">
+<p class="admonition-title">Assumes <code>y_transform="ln"</code></p>
+<p>The final exponentiation assumes the training targets were built with
+<code>BuildXYConfig(y_transform="ln")</code>, which is the default. The other supported
+options are <code>"log10"</code> and <code>"none"</code> (see <a href="../simulation-io/">Simulation I/O</a>), and
+with either of those <code>predict_mc</code> returns silently incorrect physical values —
+it will not raise. In that case use the returned <code>samples_log</code> and apply the
+matching inverse transform yourself. <code>physical_mean_relative_error</code> carries the
+same assumption.</p>
+</div>
+<h3 id="choosing-n_mc_samples">Choosing n_mc_samples<a class="headerlink" href="#choosing-n_mc_samples" title="Permanent link">&para;</a></h3>
+<p>One dropout mask is drawn per forward pass and shared across every row of <code>params</code>. Predictions for different parameter points within a single call are therefore correlated, and the effective sample size for averaging is <code>n_mc_samples</code>, not <code>n_mc_samples * len(params)</code>. Increasing the number of parameter points does not reduce Monte Carlo noise; only increasing <code>n_mc_samples</code> does.</p>
+<p>As a rough guide, the standard error on <code>pred_mean</code> scales as the per-bin coefficient of variation divided by the square root of <code>n_mc_samples</code>, while a stable <code>pred_std</code> requires roughly <code>1 + 1 / (2 * tol**2)</code> samples for a relative tolerance <code>tol</code>. Reporting the predictive spread usually drives the sample count higher than reporting the mean alone.</p>
+<h3 id="typical-usage_2">Typical Usage<a class="headerlink" href="#typical-usage_2" title="Permanent link">&para;</a></h3>
+<pre><code class="language-python">import numpy as np
+
+from reionemu import MCDropoutEmulator, predict_mc
+
+model = MCDropoutEmulator(dropout_rate=0.1)
+
+theta = np.array([[8.0, 0.5, 1.0, 0.45]], dtype=np.float32)
+
+pred_mean, pred_std, samples_dl, samples_log = predict_mc(
+    theta,
+    model,
+    X_mean=normalizers[&quot;X&quot;].mean,
+    X_std=normalizers[&quot;X&quot;].std,
+    normalize_X=True,
+    n_mc_samples=200,
+    device=&quot;cpu&quot;,
+)
+
+print(pred_mean.shape, pred_std.shape)
+print(samples_dl.shape)
+</code></pre>
+<p>Because dropout is stochastic, repeated calls return different values. Seed torch immediately before the call when you need a reproducible number:</p>
+<pre><code class="language-python">import torch
+
+torch.manual_seed(42)
+pred_mean, pred_std, _, _ = predict_mc(theta, model, X_mean, X_std, n_mc_samples=200)
+</code></pre>
+<h3 id="enable_dropout_only">enable_dropout_only<a class="headerlink" href="#enable_dropout_only" title="Permanent link">&para;</a></h3>
+<pre><code class="language-python">def enable_dropout_only(model: torch.nn.Module) -&gt; None:
+</code></pre>
+<p>Puts every <code>torch.nn.Dropout</code> layer back into training mode while leaving the rest of the model in evaluation mode. <code>predict_mc</code> calls this internally, so you only need it directly when writing a custom MC-dropout loop.</p>
+<p>Keeping the rest of the model in evaluation mode is what makes MC dropout well defined: the stochasticity must come from dropout alone, not from other layers whose behavior differs between training and evaluation.</p>
 <h2 id="model-builders">Model Builders<a class="headerlink" href="#model-builders" title="Permanent link">&para;</a></h2>
 <p>The training layer includes helper functions that build models from configuration dictionaries. These are especially useful for Ray Tune workflows, where each trial receives a different <code>config</code>.</p>
 <h3 id="build_four_param_model">build_four_param_model<a class="headerlink" href="#build_four_param_model" title="Permanent link">&para;</a></h3>
@@ -1220,7 +1439,7 @@ print(pred.shape)
 <pre><code class="language-python">def build_mc_dropout_model(config: dict) -&gt; torch.nn.Module:
 </code></pre>
 <p>This function constructs an <code>MCDropoutEmulator</code> using the same configuration keys as <code>build_four_param_model</code>, plus optional <code>dropout_rate</code>, which defaults to <code>0.1</code>.</p>
-<h3 id="typical-usage_2">Typical Usage<a class="headerlink" href="#typical-usage_2" title="Permanent link">&para;</a></h3>
+<h3 id="typical-usage_3">Typical Usage<a class="headerlink" href="#typical-usage_3" title="Permanent link">&para;</a></h3>
 <pre><code class="language-python">from reionemu import build_four_param_model, build_mc_dropout_model
 
 config = {
@@ -1259,7 +1478,10 @@ model = POCEmulatorFourParamsV3()
 <ul>
 <li><strong>Unknown activation function</strong>: Use one of <code>"relu"</code>, <code>"gelu"</code>, <code>"silu"</code>, <code>"tanh"</code>, or <code>"sigmoid"</code>.</li>
 <li><strong>Shape mismatch during training</strong>: Make sure <code>input_dim</code> matches <code>X.shape[1]</code> and <code>output_dim</code> matches <code>Y.shape[1]</code>.</li>
-<li><strong>MC dropout gives deterministic predictions</strong>: Use <code>evaluate_mc_metrics(...)</code> or <code>fit(..., evaluation="evaluate_mc_metrics")</code>; a plain <code>model.eval()</code> forward pass disables dropout.</li>
+<li><strong>MC dropout gives deterministic predictions</strong>: Use <code>predict_mc(...)</code> outside the training loop, or <code>evaluate_mc_metrics(...)</code> / <code>fit(..., evaluation="evaluate_mc_metrics")</code> inside it; a plain <code>model.eval()</code> forward pass disables dropout.</li>
+<li><strong><code>predict_mc</code> results change between runs</strong>: This is expected, since dropout masks are redrawn on every call. Seed torch immediately before the call, or raise <code>n_mc_samples</code>, to reduce run-to-run variation.</li>
+<li><strong><code>predict_mc</code> values look wrong by orders of magnitude</strong>: Check <code>BuildXYConfig.y_transform</code>. <code>predict_mc</code> exponentiates with <code>exp</code>, so a dataset built with <code>"log10"</code> or <code>"none"</code> produces silently incorrect physical units.</li>
+<li><strong><code>predict_mc</code> raises on <code>X_mean</code> or <code>X_std</code></strong>: These are required whenever <code>normalize_X</code> is <code>True</code>. Pass the fitted <code>Normalizer</code> statistics, or set <code>normalize_X=False</code> if your inputs are already standardized.</li>
 </ul>
 
 

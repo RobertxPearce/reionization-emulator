@@ -898,6 +898,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#physical_mean_relative_error" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        physical_mean_relative_error
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1216,12 +1227,14 @@ class FitConfig:
     device: str = &quot;cpu&quot;
     early_stopping_patience: Optional[int] = None
     gradient_clipping: Optional[float] = None
+    seed: Optional[int] = None
 </code></pre>
 <ul>
 <li><strong>epochs</strong>: Maximum number of training epochs.</li>
 <li><strong>device</strong>: Torch device string, such as <code>"cpu"</code>, <code>"cuda"</code>, or <code>"mps"</code>.</li>
 <li><strong>early_stopping_patience</strong>: If set, stop after this many consecutive epochs without validation-loss improvement.</li>
 <li><strong>gradient_clipping</strong>: If set, clip gradient norm to this value during training.</li>
+<li><strong>seed</strong>: If set, calls <code>torch.manual_seed()</code> (and <code>torch.cuda.manual_seed_all()</code> when CUDA is available) before training begins. Use this to make weight updates reproducible across runs. Defaults to <code>None</code> (no seed set by <code>fit</code>).</li>
 </ul>
 <h3 id="early-stopping-behavior">Early Stopping Behavior<a class="headerlink" href="#early-stopping-behavior" title="Permanent link">&para;</a></h3>
 <p>When <code>early_stopping_patience</code> is set, <code>fit(...)</code> tracks the best validation loss. If validation loss stops improving for the configured number of epochs, training stops early. After training ends, the model weights are restored to the best validation-loss state seen during that run.</p>
@@ -1284,7 +1297,7 @@ class FitConfig:
 <td style="text-align: left;">config</td>
 <td style="text-align: left;"><code>FitConfig</code></td>
 <td style="text-align: left;"><em>Required</em></td>
-<td style="text-align: left;">Epoch, device, early stopping, and gradient clipping settings</td>
+<td style="text-align: left;">Epoch, device, early stopping, gradient clipping, and optional training seed settings</td>
 </tr>
 <tr>
 <td style="text-align: left;">metrics</td>
@@ -1445,6 +1458,15 @@ print(history[&quot;val_mean_predictive_std&quot;])
 ) -&gt; torch.Tensor:
 </code></pre>
 <p>Returns the mean absolute relative error, using <code>target.abs() + eps</code> in the denominator to avoid division by zero.</p>
+<h3 id="physical_mean_relative_error">physical_mean_relative_error<a class="headerlink" href="#physical_mean_relative_error" title="Permanent link">&para;</a></h3>
+<pre><code class="language-python">def physical_mean_relative_error(
+    pred: torch.Tensor,
+    target: torch.Tensor,
+    eps: float = 1e-8,
+) -&gt; torch.Tensor:
+</code></pre>
+<p>Returns the mean absolute relative error in physical (exponentiated) space. Use this when <code>pred</code> and <code>target</code> are log-transformed values and you want the error relative to the original scale. Both tensors are exponentiated with <code>torch.exp</code> before the relative error is computed.</p>
+<p>This assumes the targets were built with <code>BuildXYConfig(y_transform="ln")</code>, the default. With <code>y_transform="log10"</code> or <code>"none"</code> the metric is silently wrong rather than raising; use <code>mean_relative_error</code> on already-physical values instead.</p>
 <h2 id="model-and-optimizer-builders">Model And Optimizer Builders<a class="headerlink" href="#model-and-optimizer-builders" title="Permanent link">&para;</a></h2>
 <p>The builder helpers create models and optimizers from dictionaries. These are used by the Ray Tune integration, but they are also useful when you want a config-driven training script.</p>
 <h3 id="build_four_param_model">build_four_param_model<a class="headerlink" href="#build_four_param_model" title="Permanent link">&para;</a></h3>
@@ -1607,6 +1629,7 @@ print(result[&quot;std_best_val&quot;])
 <li><strong>Device errors</strong>: Make sure <code>FitConfig.device</code> is available on your machine. Use <code>"cpu"</code> for the most portable option.</li>
 <li><strong>Validation loss is unstable</strong>: Try a smaller learning rate, enable gradient clipping, or use early stopping.</li>
 <li><strong>Cross-validation reuses weights</strong>: Make sure <code>model_builder</code> returns a new model instance every time it is called.</li>
+<li><strong>Cross-validation and <code>FitConfig.seed</code> interaction</strong>: <code>kfold_cross_validate</code> sets its own per-fold seed (<code>kfold_config.seed + fold_id</code>) before calling <code>model_builder</code> and <code>optimizer_builder</code>. If <code>fit_config.seed</code> is also set, <code>fit</code> will overwrite the per-fold seed at the start of training. For most workflows, leave <code>fit_config.seed</code> as <code>None</code> (the default) and let the k-fold runner handle per-fold seeding.</li>
 <li><strong>MC-dropout uncertainty is missing</strong>: Use <code>MCDropoutEmulator</code> with <code>evaluation="evaluate_mc_metrics"</code>.</li>
 </ul>
 
