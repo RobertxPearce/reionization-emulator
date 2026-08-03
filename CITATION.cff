@@ -12,6 +12,7 @@ abstract: "Python package for emulating the kSZ angular power spectrum from reio
 repository-code: "https://github.com/RobertxPearce/reionization-emulator"
 url: "https://robertxpearce.github.io/reionization-emulator/"
 version: "0.3.0"
+doi: "10.5281/zenodo.21766410"
 date-released: "2026-08-02"
 license: "MIT"
 

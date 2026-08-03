@@ -3,8 +3,7 @@
 [![PyPI](https://img.shields.io/pypi/v/reionemu)](https://pypi.org/project/reionemu/)
 [![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-<!-- [![DOI](https://zenodo.org/badge/1051925247.svg)](https://zenodo.org/badge/latestdoi/1051925247) -->
-
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21766410.svg)](https://doi.org/10.5281/zenodo.21766410)
 
 <p align="center">
     <img src="https://raw.githubusercontent.com/RobertxPearce/reionization-emulator/main/docs/assets/reionemu-logo.png" alt="reionemu logo" width="300">
