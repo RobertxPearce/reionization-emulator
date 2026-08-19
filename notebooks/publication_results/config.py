@@ -14,6 +14,12 @@ from reionemu import (
 )
 
 # ------------------
+# Device
+# ------------------
+
+device = "cpu"
+
+# ------------------
 # Experiment
 # ------------------
 
@@ -33,6 +39,52 @@ PARAM_BOUNDS = np.array([
 
 param_labels = [r"$\bar{z}$", r"$\alpha$", r"$k_b$", r"$b_0$"]
 param_order = ["zmean_zre", "alpha_zre", "kb_zre", "b0_zre"]
+
+# ------------------
+# MCMC
+# ------------------
+
+N_DIM = 4
+N_WALKERS = 32
+N_STEPS = 30_000
+
+DISCARD = 1000
+THIN = 100
+
+# ------------------
+# Package Configs
+# ------------------
+
+SPLIT = {"train": 0.70, "val": 0.10, "test": 0.20}
+
+dlcfg = DataLoaderConfig(
+    batch_size=32,
+    seed=SEED,
+    shuffle_train=True,
+    normalize_X=True,
+    normalize_Y=False,
+)
+
+kf_fitcfg = FitConfig(
+    epochs=EPOCHS,
+    device=device,
+    early_stopping_patience=EARLY_STOP,
+    gradient_clipping=None,
+)
+
+kfcfg = KFoldConfig(
+    k=5,
+    seed=SEED,
+    return_histories=True,
+)
+
+fitcfg = FitConfig(
+    epochs=EPOCHS,
+    device=device,
+    early_stopping_patience=EARLY_STOP,
+    gradient_clipping=None,
+    seed=SEED,
+)
 
 # ------------------
 # Paths
@@ -82,13 +134,6 @@ def make_dirs():
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     RECORDS_DIR.mkdir(parents=True, exist_ok=True)
 
-
-# ------------------
-# Device
-# ------------------
-
-device = "cpu"
-
 # ------------------
 # Plotting
 # ------------------
@@ -101,38 +146,3 @@ plt.rcParams.update({
     "savefig.dpi": 600,
     "pdf.fonttype": 42,
 })
-
-# ------------------
-# Package Configs
-# ------------------
-
-SPLIT = {"train": 0.70, "val": 0.10, "test": 0.20}
-
-dlcfg = DataLoaderConfig(
-    batch_size=32,
-    seed=SEED,
-    shuffle_train=True,
-    normalize_X=True,
-    normalize_Y=False,
-)
-
-kf_fitcfg = FitConfig(
-    epochs=EPOCHS,
-    device=device,
-    early_stopping_patience=EARLY_STOP,
-    gradient_clipping=None,
-)
-
-kfcfg = KFoldConfig(
-    k=5,
-    seed=SEED,
-    return_histories=True,
-)
-
-fitcfg = FitConfig(
-    epochs=EPOCHS,
-    device=device,
-    early_stopping_patience=EARLY_STOP,
-    gradient_clipping=None,
-    seed=SEED,
-)
